@@ -15,3 +15,7 @@ the emulator's deterministic random stream before the randomized signature.
 `test_usb_reply.py` pauses emulator ticker events to verify immediate Flex USB
 replies and sends overlapping commands during review to check that approval and
 rejection still apply to the original transaction.
+
+Recipient-reuse regressions cover malformed recipient keys, wrong ownership, rho,
+rseed and nullifiers for Orchard and Ironwood. The crypto unit tests compare raw
+and validated-recipient nullifiers and reject mismatched account/base material.

@@ -18,6 +18,7 @@ needed for the measurements.
 | Reuse account/viewing material and decoded input points | 10.586 s | 9.345 s | 1.241 s (11.7%) |
 | Retain fixed and locally derived point coordinates | 9.451 s | 8.515 s | 0.936 s (9.9%) |
 | Reply directly on Flex USB | 8.515 s | 6.881 s | 1.633 s (19.2%) |
+| Combined key derivation + recipient reuse (joint capture) | 6.856 s | 6.547 s | 0.309 s (4.5%) |
 
 Initial reuse derives account/FVK/viewing material once per transaction, retains
 validated external points for key agreement, and shares output diversifier work.
@@ -48,3 +49,10 @@ With recipient reuse in the next change, the refreshed pair measured
 0.897058 → 0.711057 s. This was a joint measurement; no isolated total-time
 saving is attributed to this constructor alone. The pair used
 `9b2707bab4b702cca` and `4ae16e854f12007b`.
+
+Recipient reuse carries the account-checked diversifier base and transmission key
+from ownership verification into nullifier validation. Canonical/nonidentity
+checks on untrusted input remain, and raw-recipient entry points still validate.
+In the joint pair above, transaction validation fell 4.825009 → 4.688975 s,
+point decodes 4 → 3 and diversifier hashes 4 → 3. Review submission stayed
+0.694 s. Only this joint pair establishes the 0.309 s total reduction.
