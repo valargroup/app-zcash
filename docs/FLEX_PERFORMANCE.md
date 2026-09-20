@@ -16,6 +16,7 @@ needed for the measurements.
 | Change | Before | After | Observed saving |
 |---|---:|---:|---:|
 | Reuse account/viewing material and decoded input points | 10.586 s | 9.345 s | 1.241 s (11.7%) |
+| Retain fixed and locally derived point coordinates | 9.451 s | 8.515 s | 0.936 s (9.9%) |
 
 Initial reuse derives account/FVK/viewing material once per transaction, retains
 validated external points for key agreement, and shares output diversifier work.
@@ -27,3 +28,9 @@ Build identities for this pair are `a3c51c531d5d4e26` (control) and
 and diagnostic marker overhead; estimated processing saving was about 1.05 s.
 Later comparisons use refreshed controls, so their deltas must not be summed
 into a synthetic measurement.
+
+Point reuse initializes SDK points from full coordinates already known for fixed
+bases and locally derived points, and negates a point directly. External encoded
+points still undergo canonical/nonidentity checks. Decodes fell 18 → 4 in the
+matched capture, with estimated processing saving 0.867 s. This pair used
+`f662c78888c56445` (refreshed control) and `ed6202a18e0ede42` (candidate).

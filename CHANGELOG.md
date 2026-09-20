@@ -3,7 +3,9 @@
 ## Unreleased
 
 - Reduce repeated account-key derivation, point decoding, and diversifier hashing
-  while validating shielded transactions, preserving per-action checks.
+  while validating shielded transactions, preserving per-action checks. Reuse full
+  coordinates for fixed and locally derived points while retaining Ledger’s
+  randomized multiplication and validation of external points.
 
 ## 3.9.3
 
