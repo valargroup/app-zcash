@@ -1,0 +1,32 @@
+# Ledger delta for ledger_device_sdk.
+# Base: crates.io package ledger_device_sdk 1.37.0
+# Upstream source commit 8057ecc256cf6fa2af5254031cd9fa95671e5f5e.
+# Regenerate with vendor/generate_patches.sh.
+#
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,6 +32,8 @@
+ default = ["heap"]
+ heap = ["ledger_secure_sdk_sys/heap"]
+ io_new = []
++# Experimental Flex USB replies; events remain serviced by the receive loop.
++fast_usb_reply = []
+ log_debug = ["log_info"]
+ log_error = []
+ log_info = ["log_warn"]
+--- a/src/io_legacy.rs
++++ b/src/io_legacy.rs
+@@ -282,7 +282,12 @@
+             target_os = "apex_p",
+             feature = "nano_nbgl"
+         ))]
+-        if !self.skip_rx_on_send {
++        // Flex USB can reply immediately and service UX events in the receive loop.
++        // Other targets and transports retain the existing pre-reply receive.
++        if !self.skip_rx_on_send
++            && !(cfg!(all(feature = "fast_usb_reply", target_os = "flex"))
++                && self.apdu_type == seph::PacketTypes::PacketTypeUsbHidApdu as u8)
++        {
+             let mut buffer: [u8; 273] = [0; 273];
+             let status = sys_seph::io_rx(&mut buffer, false);
+             if status > 0 {

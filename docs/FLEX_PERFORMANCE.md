@@ -17,6 +17,7 @@ needed for the measurements.
 |---|---:|---:|---:|
 | Reuse account/viewing material and decoded input points | 10.586 s | 9.345 s | 1.241 s (11.7%) |
 | Retain fixed and locally derived point coordinates | 9.451 s | 8.515 s | 0.936 s (9.9%) |
+| Reply directly on Flex USB | 8.515 s | 6.881 s | 1.633 s (19.2%) |
 
 Initial reuse derives account/FVK/viewing material once per transaction, retains
 validated external points for key agreement, and shares output diversifier work.
@@ -34,3 +35,9 @@ bases and locally derived points, and negates a point directly. External encoded
 points still undergo canonical/nonidentity checks. Decodes fell 18 → 4 in the
 matched capture, with estimated processing saving 0.867 s. This pair used
 `f662c78888c56445` (refreshed control) and `ed6202a18e0ede42` (candidate).
+
+The Flex USB reply patch skips the receive/tick wait immediately before replying,
+while continuing to service UX events in the receive loop. The pre-reply interval
+fell 1.696 → 0.042 s; full comparison is 8.514869 → 6.881416 s. Build identities
+are `ed6202a18e0ede42` and `9b2707bab4b702cca`. Locked-device refusal and recovery
+after USB reconnect passed on the physical candidate.

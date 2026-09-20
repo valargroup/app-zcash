@@ -11,3 +11,7 @@ randomized verification key and an independently computed transaction digest.
 Retained signature vectors must verify too. Byte-for-byte comparison is not
 appropriate when an optimization changes how many blinded SDK operations consume
 the emulator's deterministic random stream before the randomized signature.
+
+`test_usb_reply.py` pauses emulator ticker events to verify immediate Flex USB
+replies and sends overlapping commands during review to check that approval and
+rejection still apply to the original transaction.

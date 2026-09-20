@@ -8,7 +8,7 @@ exclude = ["vendor/rust-secp256k1"]
 # transport can be answered mid-review. The app does not enable `io_new`, so it runs the legacy I/O
 # path, which is where that release added the guard. Expressed as a requirement rather than left to
 # the lock file, which a regeneration could move on its own.
-ledger_device_sdk = { version = "1.37", features = ["sys"] }
+ledger_device_sdk = { version = "1.37", features = ["sys", "fast_usb_reply"] }
 zeroize = { version = "1.6.0", default-features = false }
 
 [package]
@@ -36,6 +36,8 @@ num_enum = { version = "0.7.5", default-features = false }
 zeroize = { workspace = true }
 
 [patch.crates-io]
+# SDK 1.37 with the scoped Flex USB reply change; see vendor/LEDGER_SDK.md.
+ledger_device_sdk = { path = "./vendor/ledger_device_sdk" }
 # Pulled by bitvec (via orchard)
 radium = { path = "./vendor/radium" }
 # Pulled by bip32 (zcash_transparent) and zcash_script

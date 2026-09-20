@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Remove the pre-reply receive wait for Flex USB HID while retaining receive-loop
+  event servicing and the command-in-progress guard during review.
+
 - Reduce repeated account-key derivation, point decoding, and diversifier hashing
   while validating shielded transactions, preserving per-action checks. Reuse full
   coordinates for fixed and locally derived points while retaining Ledger’s
