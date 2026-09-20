@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Reduce repeated account-key derivation, point decoding, and diversifier hashing
+  while validating shielded transactions, preserving per-action checks.
+
 ## 3.9.3
 
 Security release addressing the findings of an external code security scan of 3.9.2.

@@ -1874,3 +1874,71 @@ def test_pczt_v1_metadata_backward_compat_in_v2_bundle(
 
     auth_sig = client.pczt_sign_ironwood(action_index=0).data
     assert len(auth_sig) == 64
+
+
+
+def test_pczt_ironwood_dummy_before_real_reuses_account_keys(
+    backend,
+    scenario_navigator: NavigateWithScenario,
+):
+    """A dummy can populate the account cache before a real spend needs its ASK."""
+    client = ZcashCommandSender(backend)
+    bundle = _ironwood_bundle_with_external_recipient()
+    bundle.actions.reverse()
+    with client.send_pczt(
+        pczt_global=PCZT_V6_GLOBAL,
+        transparent_inputs=[],
+        transparent_outputs=[],
+        ironwood_bundle=bundle,
+    ):
+        _review_approve(
+            scenario_navigator,
+            "test_pczt_ironwood_display_private_transfer_with_change",
+        )
+    assert len(client.pczt_sign_ironwood(action_index=1).data) == 64
+
+
+@pytest.mark.parametrize("field", [
+    "signing_path", "rk", "nullifier", "spend_recipient", "cv_net", "ephemeral_key", "cmx",
+])
+def test_pczt_ironwood_cached_keys_preserve_action_checks(backend, field):
+    """A valid first action must not let a malformed second action reuse validation."""
+    client = ZcashCommandSender(backend)
+    bundle = _ironwood_bundle_with_external_recipient()
+    bundle.actions.reverse()
+    action = bundle.actions[1]
+    if field == "signing_path":
+        action.signing_path = "m/32'/133'/1'"
+        expected = Errors.SW_BAD_STATE
+    else:
+        original = getattr(action, field)
+        setattr(action, field, original[:-1] + bytes([original[-1] ^ 1]))
+        expected = Errors.SW_INVALID_TRANSACTION
+    with pytest.raises(ExceptionRAPDU) as error:
+        with client.send_pczt(
+            pczt_global=PCZT_V6_GLOBAL,
+            transparent_inputs=[],
+            transparent_outputs=[],
+            ironwood_bundle=bundle,
+        ):
+            pytest.fail(f"Device accepted a cached-account action with invalid {field}")
+    assert error.value.status == expected
+    assert not error.value.data
+
+
+def test_pczt_v6_cached_account_path_is_checked_between_pools(backend):
+    """A cache populated by Orchard cannot authorize a different Ironwood account."""
+    client = ZcashCommandSender(backend)
+    ironwood = _valid_ironwood_bundle()
+    ironwood.actions[0].signing_path = "m/32'/133'/1'"
+    with pytest.raises(ExceptionRAPDU) as error:
+        with client.send_pczt(
+            pczt_global=PCZT_V6_GLOBAL,
+            transparent_inputs=[],
+            transparent_outputs=[_TRANSPARENT_OUTPUT_599K],
+            orchard_bundle=_valid_orchard_bundle(),
+            ironwood_bundle=ironwood,
+        ):
+            pytest.fail("Device reused account keys for a different pool's account")
+    assert error.value.status == Errors.SW_BAD_STATE
+    assert not error.value.data
