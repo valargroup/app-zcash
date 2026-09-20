@@ -41,3 +41,10 @@ while continuing to service UX events in the receive loop. The pre-reply interva
 fell 1.696 → 0.042 s; full comparison is 8.514869 → 6.881416 s. Build identities
 are `ed6202a18e0ede42` and `9b2707bab4b702cca`. Locked-device refusal and recovery
 after USB reconnect passed on the physical candidate.
+
+Combined key derivation returns the normalized ASK already used to build the FVK.
+With recipient reuse in the next change, the refreshed pair measured
+6.856293 → 6.547234 s (0.309059 s, 4.5%). Key preparation fell
+0.897058 → 0.711057 s. This was a joint measurement; no isolated total-time
+saving is attributed to this constructor alone. The pair used
+`9b2707bab4b702cca` and `4ae16e854f12007b`.
