@@ -56,3 +56,17 @@ checks on untrusted input remain, and raw-recipient entry points still validate.
 In the joint pair above, transaction validation fell 4.825009 → 4.688975 s,
 point decodes 4 → 3 and diversifier hashes 4 → 3. Review submission stayed
 0.694 s. Only this joint pair establishes the 0.309 s total reduction.
+
+The final key-reuse extension keeps the normalized validation scalar across
+actions, including leading dummy actions, and wipes it before review or reset.
+Matched emulator traces across both pools remove one scalar multiplication when
+a dummy comes first, one for two real spends, or two for two real spends after a
+dummy. These are operation counts, not physical timing. The real-first,
+single-real-spend shape above performs no fewer scalar multiplications, so its
+last physical result remains 6.547234 s. No additional total-time gain is claimed.
+
+The distinct-real-note tests also use different randomized keys, reject a bad
+second key or different account after cache reuse, and accept a fresh transaction
+after rejection. Key tests cover both normalization signs and repeated alpha
+values. External/internal address lookup order and Ledger randomized scalar
+multiplication are unchanged. No GLV is enabled.

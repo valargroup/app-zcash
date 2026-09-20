@@ -293,3 +293,11 @@ Validation reuses the canonical recipient produced by the same action's account
 membership check when computing its nullifier. The typed value contains both the
 diversifier base and transmission key; raw bytes cannot replace either one after
 validation. Rho, randomness, nullifier and commitment checks still run per action.
+
+The normalized spend authorizing scalar is retained only during validation,
+bound to the complete cached account path. The path is checked even on a cache
+hit and each real action verifies its own randomized key. Leading dummy actions
+prepare the same cache, so later real actions do not repeat key normalization.
+The retained scalar uses wipe-on-drop storage and redacted debug formatting; it
+is discarded before user review and on parser reset or error. Signing still
+derives its key through the original post-approval path.

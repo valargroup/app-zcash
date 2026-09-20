@@ -55,8 +55,8 @@ use crate::utils::{
     output_script_is_regular,
 };
 use crate::zip32::{
-    OrchardAsk, OrchardFvk, derive_orchard_ask_from_sk, derive_orchard_fvk_and_ask_from_sk,
-    derive_orchard_fvk_from_sk, derive_orchard_sk_bytes, orchard_network,
+    OrchardFvk, OrchardValidationKey, derive_orchard_fvk_and_ask_from_sk, derive_orchard_sk_bytes,
+    orchard_network,
 };
 
 use super::reader::{ByteReader, ReadBytesExt};
@@ -449,6 +449,8 @@ pub struct PcztParser {
     orchard_spending_key_path: Option<Bip32Path>,
     // Shared by both pools under orchard_spending_key_path; discarded before review.
     orchard_fvk: Option<OrchardFvk>,
+    // Normalized scalar under the same account path. Wiped before review or on reset.
+    orchard_validation_key: Option<OrchardValidationKey>,
     is_v6_tx: bool,
     has_orchard_bundle: bool,
     has_ironwood_bundle: bool,
@@ -499,6 +501,7 @@ impl PcztParser {
             orchard_spending_key: None,
             orchard_spending_key_path: None,
             orchard_fvk: None,
+            orchard_validation_key: None,
             is_v6_tx: false,
             has_orchard_bundle: false,
             has_ironwood_bundle: false,
@@ -564,6 +567,7 @@ impl PcztParser {
         self.orchard_spending_key = None;
         self.orchard_spending_key_path = None;
         self.orchard_fvk = None;
+        self.orchard_validation_key = None;
     }
 
     fn reset_on_error<T>(&mut self, result: Result<T, ParserError>) -> Result<T, ParserError> {

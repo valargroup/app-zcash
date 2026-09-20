@@ -956,7 +956,7 @@ impl PcztParser {
         Ok(())
     }
 
-    fn verify_current_orchard_rk(&self, ask: &OrchardAsk) -> Result<(), ParserError> {
+    fn verify_current_orchard_rk(&self, ask: &OrchardValidationKey) -> Result<(), ParserError> {
         let alpha = self
             .current_action
             .alpha
@@ -1086,8 +1086,12 @@ impl PcztParser {
             self.orchard_action_parsed_count, path
         );
 
-        let ask_for_rk = self.prepare_shielded_account_keys(ctx, &path)?;
-        if let Some(ref ask) = ask_for_rk {
+        self.prepare_shielded_account_keys(ctx, &path)?;
+        if self.current_action.spend_value != 0 {
+            let ask = self
+                .orchard_validation_key
+                .as_ref()
+                .ok_or_else(|| ParserError::from_sw(AppSW::BadState))?;
             self.verify_current_orchard_rk(ask)?;
         }
         debug!(

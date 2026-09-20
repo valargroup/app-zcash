@@ -21,6 +21,7 @@ mod tests {
             for (seed, expected_fvk, expected_ask, expected_rk) in VECTORS {
                 let sk = SpendingKey::ledger_from_bytes(&[seed; 32]).map_err(|_| ())?;
                 let (fvk, ask) = FullViewingKey::ledger_try_from_with_ask(&sk).map_err(|_| ())?;
+                let retained = ask.ledger_validation_key();
                 let actual: [u8; 32] = ask
                     .randomize_ledger(&pallas::Scalar::ZERO)
                     .map_err(|_| ())?
@@ -31,8 +32,27 @@ mod tests {
                         .randomized_verification_key_bytes(&pallas::Scalar::ONE)
                         .map_err(|_| ())?
                         != expected_rk
+                    || retained
+                        .randomized_verification_key_bytes(&pallas::Scalar::ONE)
+                        .map_err(|_| ())?
+                        != expected_rk
                 {
                     return Err(());
+                }
+                for alpha in [
+                    pallas::Scalar::ZERO,
+                    pallas::Scalar::from(2),
+                    -pallas::Scalar::ONE,
+                ] {
+                    if retained
+                        .randomized_verification_key_bytes(&alpha)
+                        .map_err(|_| ())?
+                        != ask
+                            .randomized_verification_key_bytes(&alpha)
+                            .map_err(|_| ())?
+                    {
+                        return Err(());
+                    }
                 }
             }
             Ok(())
