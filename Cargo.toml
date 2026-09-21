@@ -4,11 +4,8 @@ default-members = ["."]
 exclude = ["vendor/rust-secp256k1"]
 
 [workspace.dependencies]
-# Floor at 1.37: earlier releases accept an APDU while a command is still being processed, so a
-# transport can be answered mid-review. The app does not enable `io_new`, so it runs the legacy I/O
-# path, which is where that release added the guard. Expressed as a requirement rather than left to
-# the lock file, which a regeneration could move on its own.
-ledger_device_sdk = { version = "1.37", features = ["sys", "fast_usb_reply"] }
+# SDK 1.37 fixes command rejection and transport preservation during NBGL review.
+ledger_device_sdk = { version = "1.37", features = ["sys", "io_new"] }
 zeroize = { version = "1.6.0", default-features = false }
 
 [package]
@@ -36,10 +33,6 @@ num_enum = { version = "0.7.5", default-features = false }
 zeroize = { workspace = true }
 
 [patch.crates-io]
-# Keep the consumed SDK crate family on one revision; see docs/LEDGER_SDK.md.
-ledger_device_sdk = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
-ledger_secure_sdk_sys = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
-include_gif = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
 # Pulled by bitvec (via orchard)
 radium = { path = "./vendor/radium" }
 # Pulled by bip32 (zcash_transparent) and zcash_script

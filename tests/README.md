@@ -15,3 +15,8 @@ the emulator's deterministic random stream before the randomized signature.
 `test_usb_reply.py` pauses emulator ticker events to verify immediate USB HID
 replies and sends overlapping commands during review to check that approval and
 rejection still apply to the original transaction.
+
+The app uses published SDK `io_new` on every supported target. The ticker test
+is emulator-only and does not establish physical USB, BLE or NFC timings.
+`test_error_cmd.py` checks strict short/extended APDU lengths, four-byte empty
+commands and successful communication after framing errors.
