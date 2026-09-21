@@ -37,9 +37,9 @@ zeroize = { workspace = true }
 
 [patch.crates-io]
 # Keep the consumed SDK crate family on one revision; see docs/LEDGER_SDK.md.
-ledger_device_sdk = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "f076221a7cbb8fb1efdacd68749a993c1b794b01" }
-ledger_secure_sdk_sys = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "f076221a7cbb8fb1efdacd68749a993c1b794b01" }
-include_gif = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "f076221a7cbb8fb1efdacd68749a993c1b794b01" }
+ledger_device_sdk = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
+ledger_secure_sdk_sys = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
+include_gif = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
 # Pulled by bitvec (via orchard)
 radium = { path = "./vendor/radium" }
 # Pulled by bip32 (zcash_transparent) and zcash_script
