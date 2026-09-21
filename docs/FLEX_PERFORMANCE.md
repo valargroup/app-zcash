@@ -72,7 +72,7 @@ Do not combine their absolute timings with the separate measurements above.
 |---|---:|---:|---:|
 | Reuse account/viewing material and decoded input points | 10.586 s | 9.345 s | 1.241 s (11.7%) |
 | Retain fixed and locally derived point coordinates | 9.451 s | 8.515 s | 0.936 s (9.9%) |
-| Reply directly on Flex USB | 8.515 s | 6.881 s | 1.633 s (19.2%) |
+| Earlier legacy-I/O USB reply patch | 8.515 s | 6.881 s | 1.633 s (19.2%) |
 | Combined key derivation + recipient reuse (joint capture) | 6.856 s | 6.547 s | 0.309 s (4.5%) |
 
 Initial reuse derives account/FVK/viewing material once per transaction, retains
@@ -97,6 +97,10 @@ while continuing to service UX events in the receive loop. The pre-reply interva
 fell 1.696 → 0.042 s; full comparison is 8.514869 → 6.881416 s. Build identities
 are `ed6202a18e0ede42` and `9b2707bab4b702cca`. Locked-device refusal and recovery
 after USB reconnect passed on the physical candidate.
+
+The reply change now uses the published SDK's `io_new` API instead of an SDK
+fork. This migration has not been retimed on a physical Flex. The row above
+records the earlier implementation; it is not a measurement of the new path.
 
 The earlier joint key/recipient pair used `9b2707bab4b702cca` and
 `4ae16e854f12007b`. Key preparation fell 0.897058 → 0.711057 s and validation

@@ -14,9 +14,6 @@ pasta_curves = { version = "0.5", default-features = false, features = ["alloc",
 ff = { version = "0.13", default-features = false }
 
 [patch.crates-io]
-ledger_device_sdk = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
-ledger_secure_sdk_sys = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
-include_gif = { git = "https://github.com/valargroup/ledger-device-rust-sdk", rev = "4dfcb1fa29e8e5ef017dbb688935beecc6699200" }
 # Pulled by bitvec (via orchard)
 radium = { path = "../../vendor/radium" }
 # Pulled by bip32 (zcash_transparent) and zcash_script
