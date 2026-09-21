@@ -209,6 +209,7 @@ impl PcztParser {
                 fees
             ));
         } else if !ok!(ui_display_tx(
+            ctx.comm,
             &ctx.tx_info.outputs,
             fees,
             transfer_type,
