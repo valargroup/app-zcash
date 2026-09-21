@@ -199,6 +199,7 @@ impl PcztParser {
             HexSlice(&self.current_action.ephemeral_key)
         );
 
+        self.parse_output_point_coordinates(reader)?;
         Self::ensure_ironwood_apdu_group_end(reader)?;
         self.state = PcztParserState::WaitIronwoodEncCiphertextLen;
 

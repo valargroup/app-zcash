@@ -213,6 +213,22 @@ action is accepted:
 
 Dummy spends are not represented by this compact APDU subset.
 
+## Coordinates in the output header
+
+The Orchard and Ironwood output small-fields packet may be either the original
+64-byte `cmx || ephemeral_key`, or a 192-byte packet appending both public points:
+`cmx || ephemeral_key || ephemeral_x || ephemeral_y || recipient_x || recipient_y`.
+Each coordinate is a canonical 32-byte little-endian field element. No other
+header length is accepted. The extended header uses the ordinary bundle command
+and unchanged P1/P2 chunk flags, saving a separate command/reply per action.
+
+Both points receive the same validity and transaction-binding checks described
+below. Only the original compressed fields enter transaction hashes; the appended
+coordinates are helpers. The separate coordinate command remains available with
+the original header. Supplying either point again after an extended header is a
+duplicate and resets the transaction. Older apps reject the extended header;
+clients must negotiate support or restart the transaction using the original form.
+
 ## PCZT_POINT_COORDINATES
 
 `CLA=0xE0`, `INS=0x5A`. P1 selects Orchard (`0x00`) or Ironwood (`0x01`).

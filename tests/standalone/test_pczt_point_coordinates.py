@@ -35,7 +35,7 @@ def _request(bundle, pool):
     )
 
 
-def _inject(backend, monkeypatch, bundle, pool, kinds=(False, True), mutate=None, first_only=False):
+def _inject(backend, monkeypatch, bundle, pool, kinds=(False, True), mutate=None, first_only=False, inline=False):
     """Insert the optional APDUs at real output-header boundaries."""
     exchange = backend.exchange
     client = ZcashCommandSender(backend)
@@ -45,6 +45,21 @@ def _inject(backend, monkeypatch, bundle, pool, kinds=(False, True), mutate=None
 
     def wrapped(*args, **kwargs):
         nonlocal action_index
+        if inline and action_index < len(bundle.actions):
+            action = bundle.actions[action_index]
+            if kwargs.get("ins") == instruction and kwargs.get("data") == action.cmx + action.ephemeral_key:
+                index = action_index
+                action_index += 1
+                if not first_only or index == 0:
+                    payload = b""
+                    for recipient in (False, True):
+                        x, y = _coordinates(action.recipient[11:] if recipient else action.ephemeral_key)
+                        if mutate and recipient in kinds:
+                            x, y = mutate(index, recipient, x, y)
+                        payload += x + y
+                        sent.append((index, recipient))
+                    kwargs = {**kwargs, "data": kwargs["data"] + payload}
+                return exchange(*args, **kwargs)
         response = exchange(*args, **kwargs)
         if action_index < len(bundle.actions):
             action = bundle.actions[action_index]
@@ -101,7 +116,7 @@ def test_pczt_supplied_points_sign(backend, scenario_navigator, monkeypatch, poo
     _sign_and_verify(client, pool, bundle)
 
 
-def _start_action(client, pool):
+def _start_action(client, pool, *, include_output=True):
     bundle = _bundle(pool)
     client._send_pczt_header(PcztGlobal() if pool == "orchard" else PCZT_V6_GLOBAL)
     client._send_pczt_transparent_inputs([])
@@ -110,7 +125,7 @@ def _start_action(client, pool):
         client._send_pczt_orchard_actions_sync(PcztOrchardBundle([], 0, 0, bytes(32)))
     packets = getattr(client, f"_build_pczt_{pool}_action_packets")(bundle)
     instruction = InsType.PCZT_ORCHARD_ACTION if pool == "orchard" else InsType.PCZT_IRONWOOD_ACTION
-    for index, packet in enumerate(packets[:4]):
+    for index, packet in enumerate(packets[:4 if include_output else 3]):
         client.backend.exchange(cla=CLA, ins=instruction, p1=client._pczt_chunk_p1(index, len(packets)), p2=0, data=packet)
     return bundle, packets, instruction
 
@@ -179,7 +194,8 @@ def test_pczt_supplied_points_reject_invalid(backend, pool, case):
 
 @pytest.mark.parametrize("pool", ["orchard", "ironwood"])
 @pytest.mark.parametrize("index", [0, 1])
-def test_pczt_supplied_recipient_must_match_even_when_unused(backend, monkeypatch, pool, index):
+@pytest.mark.parametrize("inline", [False, True])
+def test_pczt_supplied_recipient_must_match_even_when_unused(backend, monkeypatch, pool, index, inline):
     bundle = _bundle(pool)
 
     def wrong_recipient(action_index, recipient, x, y):
@@ -187,7 +203,7 @@ def test_pczt_supplied_recipient_must_match_even_when_unused(backend, monkeypatc
         # path, so its recipient helper is checked even without outgoing recovery.
         return _coordinates(bundle.actions[1 - index].recipient[11:]) if action_index == index else (x, y)
 
-    _inject(backend, monkeypatch, bundle, pool, (True,), wrong_recipient)
+    _inject(backend, monkeypatch, bundle, pool, (True,), wrong_recipient, inline=inline)
     client = ZcashCommandSender(backend)
     with pytest.raises(ExceptionRAPDU) as error:
         with client.send_pczt(**_request(bundle, pool)):
@@ -196,9 +212,10 @@ def test_pczt_supplied_recipient_must_match_even_when_unused(backend, monkeypatc
 
 
 @pytest.mark.parametrize("pool", ["orchard", "ironwood"])
-def test_pczt_supplied_points_do_not_leak_to_next_action_or_transaction(backend, scenario_navigator, monkeypatch, pool):
+@pytest.mark.parametrize("inline", [False, True])
+def test_pczt_supplied_points_do_not_leak_to_next_action_or_transaction(backend, scenario_navigator, monkeypatch, pool, inline):
     bundle = _bundle(pool)
-    sent = _inject(backend, monkeypatch, bundle, pool, first_only=True)
+    sent = _inject(backend, monkeypatch, bundle, pool, first_only=True, inline=inline)
     client = ZcashCommandSender(backend)
     for _ in range(2):
         # First transaction: helpers only on the first action. Second: no helpers.
@@ -210,9 +227,10 @@ def test_pczt_supplied_points_do_not_leak_to_next_action_or_transaction(backend,
 
 
 @pytest.mark.parametrize("pool", ["orchard", "ironwood"])
-def test_pczt_supplied_points_review_rejection(backend, scenario_navigator, monkeypatch, pool):
+@pytest.mark.parametrize("inline", [False, True])
+def test_pczt_supplied_points_review_rejection(backend, scenario_navigator, monkeypatch, pool, inline):
     bundle = _bundle(pool)
-    _inject(backend, monkeypatch, bundle, pool)
+    _inject(backend, monkeypatch, bundle, pool, inline=inline)
     client = ZcashCommandSender(backend)
     with pytest.raises(ExceptionRAPDU) as error:
         with client.send_pczt(**_request(bundle, pool)):
@@ -248,7 +266,8 @@ def test_pczt_supplied_points_error_then_fresh_transaction(backend, scenario_nav
 
 @pytest.mark.parametrize("pool", ["orchard", "ironwood"])
 @pytest.mark.parametrize("field", ["cmx", "enc_ciphertext", "out_ciphertext", "value"])
-def test_pczt_supplied_points_preserve_output_checks(backend, monkeypatch, pool, field):
+@pytest.mark.parametrize("inline", [False, True])
+def test_pczt_supplied_points_preserve_output_checks(backend, monkeypatch, pool, field, inline):
     bundle = _bundle(pool)
     action = bundle.actions[0]
     if field == "value":
@@ -256,7 +275,7 @@ def test_pczt_supplied_points_preserve_output_checks(backend, monkeypatch, pool,
     else:
         original = getattr(action, field)
         setattr(action, field, bytes([original[0] ^ 1]) + original[1:])
-    _inject(backend, monkeypatch, bundle, pool)
+    _inject(backend, monkeypatch, bundle, pool, inline=inline)
     with pytest.raises(ExceptionRAPDU) as error:
         with ZcashCommandSender(backend).send_pczt(**_request(bundle, pool)):
             pytest.fail("Tampered output reached review with supplied coordinates")
@@ -286,4 +305,65 @@ def test_pczt_supplied_point_batch_rejects(backend, scenario_navigator, pool, ca
         # A validated first point must not survive failure of the second point.
         with client.send_pczt(**_request(bundle, pool)):
             _review_approve(scenario_navigator, "partial_batch_recovery", compare=False)
+        _sign_and_verify(client, pool, bundle)
+
+
+@pytest.mark.parametrize("pool", ["orchard", "ironwood"])
+def test_pczt_inline_points_sign(backend, scenario_navigator, monkeypatch, pool):
+    bundle = _bundle(pool)
+    sent = _inject(backend, monkeypatch, bundle, pool, inline=True)
+    client = ZcashCommandSender(backend)
+    with client.send_pczt(**_request(bundle, pool)):
+        name = _ORCHARD_TO_ORCHARD_SNAPSHOTS if pool == "orchard" else "test_pczt_ironwood_display_private_transfer_with_change"
+        _review_approve(scenario_navigator, name)
+    assert len(sent) == len(bundle.actions) * 2
+    _sign_and_verify(client, pool, bundle)
+
+
+@pytest.mark.parametrize("pool", ["orchard", "ironwood"])
+@pytest.mark.parametrize(
+    "case",
+    ["short", "long", "single_point", "off_curve", "wrong_point", "wrong_sign",
+     "x_modulus", "y_modulus", "bad_second", "duplicate"],
+)
+def test_pczt_inline_points_reject_invalid_and_recover(backend, scenario_navigator, pool, case):
+    client = ZcashCommandSender(backend)
+    bundle, packets, instruction = _start_action(client, pool, include_output=False)
+    action = bundle.actions[0]
+    x, y = _coordinates(action.ephemeral_key)
+    if case == "off_curve":
+        y = ((int.from_bytes(y, "little") + 2) % PALLAS_BASE_MODULUS).to_bytes(32, "little")
+    elif case == "wrong_point":
+        x, y = _coordinates(bundle.actions[1].ephemeral_key)
+    elif case == "wrong_sign":
+        y = (PALLAS_BASE_MODULUS - int.from_bytes(y, "little")).to_bytes(32, "little")
+    elif case == "x_modulus":
+        x = PALLAS_BASE_MODULUS.to_bytes(32, "little")
+    elif case == "y_modulus":
+        y = PALLAS_BASE_MODULUS.to_bytes(32, "little")
+    data = packets[3] + x + y + b"".join(_coordinates(action.recipient[11:]))
+    if case == "short":
+        data = data[:-1]
+    elif case == "long":
+        data += b"\0"
+    elif case == "single_point":
+        data = data[:128]
+    elif case == "bad_second":
+        data = data[:128] + bytes(64)
+    if case == "duplicate":
+        backend.exchange(cla=CLA, ins=instruction, p1=0x80, p2=0, data=data)
+    with pytest.raises(ExceptionRAPDU) as error:
+        if case == "duplicate":
+            client.pczt_point_coordinates(x, y, ironwood=pool == "ironwood")
+        else:
+            backend.exchange(cla=CLA, ins=instruction, p1=0x80, p2=0, data=data)
+    assert error.value.status == Errors.SW_INVALID_TRANSACTION and not error.value.data
+    # The failed header must not leave a digest signable or coordinates reusable.
+    sign = client.pczt_sign_orchard if pool == "orchard" else client.pczt_sign_ironwood
+    with pytest.raises(ExceptionRAPDU) as error:
+        sign(action_index=0)
+    assert error.value.status == Errors.SW_CONDITIONS_OF_USE_NOT_SATISFIED
+    if case == "bad_second":
+        with client.send_pczt(**_request(bundle, pool)):
+            _review_approve(scenario_navigator, "inline_partial_recovery", compare=False)
         _sign_and_verify(client, pool, bundle)

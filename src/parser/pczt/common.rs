@@ -2,6 +2,22 @@ use super::*;
 use crate::consts::P2PcztPoints;
 
 impl PcztParser {
+    /// An output header may append both coordinates without changing the hashed fields.
+    pub(super) fn parse_output_point_coordinates(
+        &mut self,
+        reader: &mut ByteReader<'_>,
+    ) -> Result<(), ParserError> {
+        match reader.remaining_len() {
+            0 => return Ok(()),
+            128 => (),
+            _ => return Err(ParserError::from_str("Bad PCZT output header length")),
+        }
+        self.set_point_coordinates(&reader.remaining_slice()[..64], false)?;
+        self.set_point_coordinates(&reader.remaining_slice()[64..], true)?;
+        ok!(reader.advance(128));
+        Ok(())
+    }
+
     /// Accepts optional coordinates only between an action's output header and
     /// ciphertext. They belong to this action and are discarded with its scratch state.
     pub fn parse_point_coordinates(
