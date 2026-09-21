@@ -7,7 +7,6 @@ import pytest
 from ragger.backend.speculos import SpeculosBackend
 from ragger.utils import RAPDU
 from ragger.error import ExceptionRAPDU
-from ragger.firmware import Firmware
 from ragger.navigator.navigation_scenario import NavigationScenarioData, UseCase
 from application_client.zcash_command_sender import ZcashCommandSender, Errors
 from .test_pczt_ironwood import (
@@ -17,9 +16,9 @@ from .test_pczt_ironwood import (
 VERSION = bytes.fromhex('e0c4000000')
 
 
-def test_usb_reply_independent_of_new_ticker(backend, firmware):
-    if firmware not in (Firmware.FLEX, Firmware.STAX, Firmware.NANOSP) or not isinstance(backend, SpeculosBackend):
-        pytest.skip("This test requires Speculos on Flex, Stax or Nano S Plus")
+def test_usb_reply_independent_of_new_ticker(backend):
+    if not isinstance(backend, SpeculosBackend):
+        pytest.skip("This test requires Speculos ticker control")
     expected = backend.exchange_raw(VERSION).data
     backend.pause_ticker()
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
@@ -93,6 +92,11 @@ def test_usb_reply_overlap_preserves_review(backend, scenario_navigator, usb_str
                     query()
                 assert rejected.value.status == 0x6901
                 assert not rejected.value.data
+            with pytest.raises(ExceptionRAPDU) as malformed:
+                backend.exchange_raw(bytes.fromhex("e0c400000201"))
+            assert malformed.value.status == Errors.SW_WRONG_APDU_LENGTH
+            assert not malformed.value.data
+            assert backend.exchange_raw(bytes.fromhex("b001000000")).status == 0x9000
             scenario = NavigationScenarioData(
                 scenario_navigator.device, backend, UseCase.TX_REVIEW, approve,
             )
@@ -125,3 +129,26 @@ def test_usb_reply_overlap_preserves_review(backend, scenario_navigator, usb_str
         backend.wait_for_home_screen(timeout=10)
     assert backend.exchange_raw(VERSION).status == 0x9000
 
+
+
+def test_address_reply_survives_overlapping_command(backend, scenario_navigator, usb_stream):
+    client = ZcashCommandSender(backend)
+    path = "m/44'/133'/0'/0/0"
+    expected = client.get_public_key(path=path).data
+    with client.get_public_key_with_confirmation(path=path):
+        backend.wait_for_text_on_screen("Verify", timeout=20)
+        with pytest.raises(ExceptionRAPDU) as rejected:
+            backend.exchange_raw(VERSION)
+        assert rejected.value.status == 0x6901
+        assert not rejected.value.data
+        scenario = NavigationScenarioData(
+            scenario_navigator.device, backend, UseCase.ADDRESS_CONFIRMATION, True,
+        )
+        scenario_navigator.navigator.navigate_until_text(
+            navigate_instruction=scenario.navigation,
+            validation_instructions=scenario.validation,
+            text=scenario.pattern,
+            timeout=20,
+            screen_change_before_first_instruction=False,
+        )
+    assert client.get_async_response().data == expected

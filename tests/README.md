@@ -19,3 +19,8 @@ rejection still apply to the original transaction.
 Recipient-reuse regressions cover malformed recipient keys, wrong ownership, rho,
 rseed and nullifiers for Orchard and Ironwood. The crypto unit tests compare raw
 and validated-recipient nullifiers and reject mismatched account/base material.
+
+The app uses published SDK `io_new` on every supported target. The ticker test
+is emulator-only and does not establish physical USB, BLE or NFC timings.
+`test_error_cmd.py` checks strict short/extended APDU lengths, four-byte empty
+commands and successful communication after framing errors.

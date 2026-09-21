@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-- Remove the USB HID pre-reply receive wait on Flex, Stax and Nano S Plus with
-  NBGL while retaining receive-loop event servicing and the command-in-progress
-  guard during review.
+- Use the published SDK's new I/O path for immediate replies across supported
+  devices, retaining locked-device refusal and review-time command rejection.
+  Reject APDUs whose payload length differs from their declared length.
 
 - Reduce repeated account-key derivation, point decoding, and diversifier hashing
   while validating shielded transactions, preserving per-action checks. Reuse full
