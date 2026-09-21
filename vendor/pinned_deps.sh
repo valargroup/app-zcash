@@ -19,7 +19,6 @@
 # `git` it is the clone URL and the ref, separated by a space.
 
 VENDORED_DEPS=(
-    "ledger_device_sdk|crates|1.37.0"
     "orchard|crates|0.15.5"
     "radium|crates|0.7.0"
     "reddsa|crates|0.5.1"
