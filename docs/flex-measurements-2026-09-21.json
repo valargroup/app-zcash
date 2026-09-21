@@ -1,0 +1,1632 @@
+{
+  "date": "2026-09-21",
+  "scope": "Physical Flex USB spans through SDK review submission. Matching command shape and real/dummy order. Payload identity is not recorded; a wallet retry may reuse a prepared transaction. Human approval and wallet gaps excluded. Marker-adjusted values are estimates, not CPU cycles. No GLV or ARM32 backport.",
+  "environment": {
+    "device": "Ledger Flex",
+    "transport": "USB",
+    "sdk_api": 26,
+    "app_version": "3.9.3",
+    "rustc": "1.93.0-nightly (b33119ffd 2025-12-04)",
+    "sdk_commit": "ec72f22ee3d14f3e308fb00e341f545b9de436bc",
+    "pasta_curves": "registry 0.5.2",
+    "scalar_backend": "Ledger randomized multiplication",
+    "glv": false,
+    "arm32_backport": false,
+    "instrumentation": "Same device-profile transport and function-span scheme on each exact code snapshot; diagnostic changes excluded from PRs."
+  },
+  "validation": {
+    "profiling_transaction_tests_per_build": 29,
+    "source_projection_verified": true,
+    "installed_hashes_verified": true,
+    "other_apps_unchanged": true,
+    "successful_completed_commands_per_capture": 21,
+    "trace_errors": 0,
+    "review_ready": "SDK UI submission, not display refresh",
+    "capture_selection": "First three scheduled real-first captures per build for PR4/5. PR5 run-04 was an extra real-first workload-search capture (6.607013 s), retained locally. PR5 run-05/06/07 and PR6 run-01/02/03 form the dummy-first PR6 pair. No payload identity was captured."
+  },
+  "cohorts": [
+    {
+      "stage": "03",
+      "code_commit": "8bd7602a4ff669609bf54867251cc0d1bf91f035",
+      "installed_full_hash": "99e1dc9d50aea5175666f1d131821341828c307eaad31ba4807a9304362c57c5",
+      "action_order": [
+        "real",
+        "dummy"
+      ],
+      "captures": [
+        "run-01",
+        "run-02",
+        "run-03"
+      ],
+      "command_shape": [
+        [
+          "e0",
+          "52",
+          "00",
+          "00",
+          "34"
+        ],
+        [
+          "e0",
+          "53",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "54",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "56",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "01",
+          "01",
+          "42"
+        ]
+      ],
+      "stage_call_counts": {
+        "80": 21,
+        "37": 5,
+        "93": 1,
+        "35": 4,
+        "81": 4,
+        "5": 2,
+        "1": 22,
+        "36": 5,
+        "20": 1,
+        "30": 5,
+        "82": 17,
+        "27": 1,
+        "31": 2,
+        "22": 3,
+        "38": 1,
+        "25": 2,
+        "24": 5,
+        "23": 2,
+        "29": 2,
+        "83": 13,
+        "4": 1,
+        "26": 1,
+        "8": 2,
+        "3": 2,
+        "33": 1,
+        "7": 1,
+        "2": 2,
+        "21": 1,
+        "9": 2,
+        "6": 1,
+        "18": 1,
+        "91": 1,
+        "92": 1
+      },
+      "metrics_us": {
+        "total_us": {
+          "median": 6999472,
+          "min": 6993287,
+          "max": 7003419
+        },
+        "key_prep_us": {
+          "median": 899003,
+          "min": 897989,
+          "max": 899010
+        },
+        "validation_us": {
+          "median": 4965994,
+          "min": 4954941,
+          "max": 4970910
+        },
+        "review_submission_us": {
+          "median": 694265,
+          "min": 694188,
+          "max": 694289
+        },
+        "reply_us": {
+          "median": 84292,
+          "min": 83687,
+          "max": 84913
+        },
+        "other_us": {
+          "median": 357513,
+          "min": 354398,
+          "max": 360786
+        },
+        "calibration_us": {
+          "median": 2005.5,
+          "min": 1985.5,
+          "max": 2034.0
+        },
+        "raw_processing_us": {
+          "median": 6621351,
+          "min": 6610948,
+          "max": 6627017
+        },
+        "estimated_processing_us": {
+          "median": 6133404.5,
+          "min": 6112845.0,
+          "max": 6136000.5
+        }
+      },
+      "samples": [
+        {
+          "capture": "run-01",
+          "total_us": 6993287,
+          "key_prep_us": 899003,
+          "validation_us": 4954941,
+          "review_submission_us": 694265,
+          "reply_us": 84292,
+          "other_us": 360786,
+          "calibration_us": 2034.0,
+          "raw_processing_us": 6610948,
+          "estimated_processing_us": 6112845.0
+        },
+        {
+          "capture": "run-02",
+          "total_us": 7003419,
+          "key_prep_us": 899010,
+          "validation_us": 4970910,
+          "review_submission_us": 694188,
+          "reply_us": 84913,
+          "other_us": 354398,
+          "calibration_us": 2005.5,
+          "raw_processing_us": 6627017,
+          "estimated_processing_us": 6136000.5
+        },
+        {
+          "capture": "run-03",
+          "total_us": 6999472,
+          "key_prep_us": 897989,
+          "validation_us": 4965994,
+          "review_submission_us": 694289,
+          "reply_us": 83687,
+          "other_us": 357513,
+          "calibration_us": 1985.5,
+          "raw_processing_us": 6621351,
+          "estimated_processing_us": 6133404.5
+        }
+      ]
+    },
+    {
+      "stage": "04",
+      "code_commit": "3c3903df6f5bd3c98b48b77598e5822920bd53a9",
+      "installed_full_hash": "0edafa7523007882db4876a4703b5ab6b66f089b7ea9e86c5d639ecdecd904ad",
+      "action_order": [
+        "real",
+        "dummy"
+      ],
+      "captures": [
+        "run-01",
+        "run-02",
+        "run-03"
+      ],
+      "command_shape": [
+        [
+          "e0",
+          "52",
+          "00",
+          "00",
+          "34"
+        ],
+        [
+          "e0",
+          "53",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "54",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "56",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "01",
+          "01",
+          "42"
+        ]
+      ],
+      "stage_call_counts": {
+        "80": 20,
+        "37": 5,
+        "93": 1,
+        "35": 4,
+        "81": 4,
+        "5": 2,
+        "1": 22,
+        "36": 5,
+        "30": 5,
+        "27": 1,
+        "31": 2,
+        "25": 2,
+        "38": 1,
+        "24": 5,
+        "22": 3,
+        "82": 16,
+        "23": 2,
+        "20": 1,
+        "29": 2,
+        "83": 12,
+        "4": 1,
+        "26": 1,
+        "33": 1,
+        "3": 2,
+        "8": 2,
+        "2": 2,
+        "21": 1,
+        "7": 1,
+        "9": 2,
+        "6": 1,
+        "18": 1,
+        "92": 1,
+        "91": 1
+      },
+      "metrics_us": {
+        "total_us": {
+          "median": 6814139,
+          "min": 6805353,
+          "max": 6826497
+        },
+        "key_prep_us": {
+          "median": 713120,
+          "min": 712052,
+          "max": 714036
+        },
+        "validation_us": {
+          "median": 4961107,
+          "min": 4952869,
+          "max": 4963003
+        },
+        "review_submission_us": {
+          "median": 693118,
+          "min": 693037,
+          "max": 694285
+        },
+        "reply_us": {
+          "median": 84072,
+          "min": 83857,
+          "max": 85524
+        },
+        "other_us": {
+          "median": 362174,
+          "min": 360435,
+          "max": 373300
+        },
+        "calibration_us": {
+          "median": 2015.0,
+          "min": 1998.0,
+          "max": 2021.5
+        },
+        "raw_processing_us": {
+          "median": 6430988,
+          "min": 6421877,
+          "max": 6438497
+        },
+        "estimated_processing_us": {
+          "median": 5947460.5,
+          "min": 5944872.0,
+          "max": 5956268.0
+        }
+      },
+      "samples": [
+        {
+          "capture": "run-01",
+          "total_us": 6826497,
+          "key_prep_us": 712052,
+          "validation_us": 4963003,
+          "review_submission_us": 694285,
+          "reply_us": 83857,
+          "other_us": 373300,
+          "calibration_us": 2015.0,
+          "raw_processing_us": 6438497,
+          "estimated_processing_us": 5956268.0
+        },
+        {
+          "capture": "run-02",
+          "total_us": 6814139,
+          "key_prep_us": 714036,
+          "validation_us": 4961107,
+          "review_submission_us": 693037,
+          "reply_us": 85524,
+          "other_us": 360435,
+          "calibration_us": 2021.5,
+          "raw_processing_us": 6430988,
+          "estimated_processing_us": 5947460.5
+        },
+        {
+          "capture": "run-03",
+          "total_us": 6805353,
+          "key_prep_us": 713120,
+          "validation_us": 4952869,
+          "review_submission_us": 693118,
+          "reply_us": 84072,
+          "other_us": 362174,
+          "calibration_us": 1998.0,
+          "raw_processing_us": 6421877,
+          "estimated_processing_us": 5944872.0
+        }
+      ]
+    },
+    {
+      "stage": "05",
+      "code_commit": "d65a73593ee96bbca8d44d0c56b1e8b0fc9bb251",
+      "installed_full_hash": "6fbd8afed815ec67f90889a5b957177ae7ef783753971c771bc902ec0ea34347",
+      "action_order": [
+        "real",
+        "dummy"
+      ],
+      "captures": [
+        "run-01",
+        "run-02",
+        "run-03"
+      ],
+      "command_shape": [
+        [
+          "e0",
+          "52",
+          "00",
+          "00",
+          "34"
+        ],
+        [
+          "e0",
+          "53",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "54",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "56",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "01",
+          "01",
+          "42"
+        ]
+      ],
+      "stage_call_counts": {
+        "80": 20,
+        "37": 5,
+        "93": 1,
+        "35": 3,
+        "81": 3,
+        "5": 2,
+        "1": 22,
+        "36": 5,
+        "30": 5,
+        "31": 2,
+        "38": 1,
+        "22": 3,
+        "25": 2,
+        "24": 5,
+        "27": 1,
+        "20": 1,
+        "23": 2,
+        "82": 15,
+        "29": 2,
+        "83": 12,
+        "26": 1,
+        "4": 1,
+        "3": 2,
+        "33": 1,
+        "8": 2,
+        "2": 2,
+        "21": 1,
+        "7": 1,
+        "9": 2,
+        "6": 1,
+        "18": 1,
+        "91": 1,
+        "92": 1
+      },
+      "metrics_us": {
+        "total_us": {
+          "median": 6633093,
+          "min": 6628270,
+          "max": 6647362
+        },
+        "key_prep_us": {
+          "median": 715224,
+          "min": 711009,
+          "max": 716996
+        },
+        "validation_us": {
+          "median": 4780911,
+          "min": 4766991,
+          "max": 4798976
+        },
+        "review_submission_us": {
+          "median": 693211,
+          "min": 693139,
+          "max": 693214
+        },
+        "reply_us": {
+          "median": 83879,
+          "min": 83734,
+          "max": 83953
+        },
+        "other_us": {
+          "median": 364006,
+          "min": 356072,
+          "max": 367410
+        },
+        "calibration_us": {
+          "median": 1996.0,
+          "min": 1994.0,
+          "max": 2025.5
+        },
+        "raw_processing_us": {
+          "median": 6246358,
+          "min": 6240301,
+          "max": 6270458
+        },
+        "estimated_processing_us": {
+          "median": 5776634.5,
+          "min": 5773662.0,
+          "max": 5804313.0
+        }
+      },
+      "samples": [
+        {
+          "capture": "run-01",
+          "total_us": 6628270,
+          "key_prep_us": 716996,
+          "validation_us": 4766991,
+          "review_submission_us": 693139,
+          "reply_us": 83734,
+          "other_us": 367410,
+          "calibration_us": 1996.0,
+          "raw_processing_us": 6240301,
+          "estimated_processing_us": 5773662.0
+        },
+        {
+          "capture": "run-02",
+          "total_us": 6647362,
+          "key_prep_us": 715224,
+          "validation_us": 4798976,
+          "review_submission_us": 693211,
+          "reply_us": 83879,
+          "other_us": 356072,
+          "calibration_us": 1994.0,
+          "raw_processing_us": 6270458,
+          "estimated_processing_us": 5804313.0
+        },
+        {
+          "capture": "run-03",
+          "total_us": 6633093,
+          "key_prep_us": 711009,
+          "validation_us": 4780911,
+          "review_submission_us": 693214,
+          "reply_us": 83953,
+          "other_us": 364006,
+          "calibration_us": 2025.5,
+          "raw_processing_us": 6246358,
+          "estimated_processing_us": 5776634.5
+        }
+      ]
+    },
+    {
+      "stage": "05",
+      "code_commit": "d65a73593ee96bbca8d44d0c56b1e8b0fc9bb251",
+      "installed_full_hash": "6fbd8afed815ec67f90889a5b957177ae7ef783753971c771bc902ec0ea34347",
+      "action_order": [
+        "dummy",
+        "real"
+      ],
+      "captures": [
+        "run-05",
+        "run-06",
+        "run-07"
+      ],
+      "command_shape": [
+        [
+          "e0",
+          "52",
+          "00",
+          "00",
+          "34"
+        ],
+        [
+          "e0",
+          "53",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "54",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "56",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "01",
+          "01",
+          "42"
+        ]
+      ],
+      "stage_call_counts": {
+        "80": 21,
+        "37": 5,
+        "93": 1,
+        "35": 3,
+        "81": 3,
+        "5": 2,
+        "1": 22,
+        "36": 5,
+        "30": 5,
+        "31": 2,
+        "22": 3,
+        "2": 2,
+        "24": 5,
+        "38": 1,
+        "25": 2,
+        "19": 1,
+        "82": 16,
+        "27": 1,
+        "23": 2,
+        "29": 2,
+        "83": 13,
+        "4": 1,
+        "26": 1,
+        "8": 2,
+        "33": 1,
+        "3": 2,
+        "7": 1,
+        "21": 1,
+        "9": 2,
+        "6": 1,
+        "18": 1,
+        "92": 1,
+        "91": 1
+      },
+      "metrics_us": {
+        "total_us": {
+          "median": 6807342,
+          "min": 6803271,
+          "max": 6838263
+        },
+        "key_prep_us": {
+          "median": 906971,
+          "min": 906070,
+          "max": 916034
+        },
+        "validation_us": {
+          "median": 4765937,
+          "min": 4759917,
+          "max": 4788846
+        },
+        "review_submission_us": {
+          "median": 693299,
+          "min": 693162,
+          "max": 693303
+        },
+        "reply_us": {
+          "median": 84213,
+          "min": 83998,
+          "max": 84483
+        },
+        "other_us": {
+          "median": 355601,
+          "min": 353203,
+          "max": 363839
+        },
+        "calibration_us": {
+          "median": 1987.5,
+          "min": 1985.5,
+          "max": 1995.5
+        },
+        "raw_processing_us": {
+          "median": 6428984,
+          "min": 6421196,
+          "max": 6461054
+        },
+        "estimated_processing_us": {
+          "median": 5953060.5,
+          "min": 5943854.0,
+          "max": 5985473.5
+        }
+      },
+      "samples": [
+        {
+          "capture": "run-05",
+          "total_us": 6838263,
+          "key_prep_us": 916034,
+          "validation_us": 4788846,
+          "review_submission_us": 693299,
+          "reply_us": 84483,
+          "other_us": 355601,
+          "calibration_us": 1985.5,
+          "raw_processing_us": 6461054,
+          "estimated_processing_us": 5985473.5
+        },
+        {
+          "capture": "run-06",
+          "total_us": 6807342,
+          "key_prep_us": 906070,
+          "validation_us": 4759917,
+          "review_submission_us": 693303,
+          "reply_us": 84213,
+          "other_us": 363839,
+          "calibration_us": 1995.5,
+          "raw_processing_us": 6421196,
+          "estimated_processing_us": 5943854.0
+        },
+        {
+          "capture": "run-07",
+          "total_us": 6803271,
+          "key_prep_us": 906971,
+          "validation_us": 4765937,
+          "review_submission_us": 693162,
+          "reply_us": 83998,
+          "other_us": 353203,
+          "calibration_us": 1987.5,
+          "raw_processing_us": 6428984,
+          "estimated_processing_us": 5953060.5
+        }
+      ]
+    },
+    {
+      "stage": "06",
+      "code_commit": "04c8ae23222a2cdea6ada46ebdae265e34655bb8",
+      "installed_full_hash": "a2c409204c52f73a5911da4d57c56e6da68ca98dae65e7053106e66562c57152",
+      "action_order": [
+        "dummy",
+        "real"
+      ],
+      "captures": [
+        "run-01",
+        "run-02",
+        "run-03"
+      ],
+      "command_shape": [
+        [
+          "e0",
+          "52",
+          "00",
+          "00",
+          "34"
+        ],
+        [
+          "e0",
+          "53",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "54",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "56",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "00",
+          "00",
+          "1"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "243"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "45"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "64"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "255"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "73"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "81"
+        ],
+        [
+          "e0",
+          "58",
+          "80",
+          "00",
+          "116"
+        ],
+        [
+          "e0",
+          "58",
+          "01",
+          "01",
+          "42"
+        ]
+      ],
+      "stage_call_counts": {
+        "80": 20,
+        "37": 5,
+        "93": 1,
+        "35": 3,
+        "81": 3,
+        "5": 2,
+        "36": 5,
+        "1": 22,
+        "30": 5,
+        "22": 3,
+        "31": 2,
+        "38": 1,
+        "24": 5,
+        "25": 2,
+        "20": 1,
+        "23": 2,
+        "27": 1,
+        "29": 2,
+        "82": 15,
+        "83": 12,
+        "26": 1,
+        "4": 1,
+        "8": 2,
+        "33": 1,
+        "3": 2,
+        "2": 2,
+        "7": 1,
+        "21": 1,
+        "6": 1,
+        "9": 2,
+        "18": 1,
+        "92": 1,
+        "91": 1
+      },
+      "metrics_us": {
+        "total_us": {
+          "median": 6600386,
+          "min": 6588091,
+          "max": 6607126
+        },
+        "key_prep_us": {
+          "median": 713892,
+          "min": 713129,
+          "max": 717937
+        },
+        "validation_us": {
+          "median": 4750955,
+          "min": 4738079,
+          "max": 4752065
+        },
+        "review_submission_us": {
+          "median": 693316,
+          "min": 693293,
+          "max": 694261
+        },
+        "reply_us": {
+          "median": 83945,
+          "min": 83422,
+          "max": 84895
+        },
+        "other_us": {
+          "median": 357146,
+          "min": 354837,
+          "max": 364431
+        },
+        "calibration_us": {
+          "median": 2006.5,
+          "min": 1997.5,
+          "max": 2019.5
+        },
+        "raw_processing_us": {
+          "median": 6221334,
+          "min": 6212106,
+          "max": 6222441
+        },
+        "estimated_processing_us": {
+          "median": 5751056.5,
+          "min": 5745843.5,
+          "max": 5755054.5
+        }
+      },
+      "samples": [
+        {
+          "capture": "run-01",
+          "total_us": 6600386,
+          "key_prep_us": 713129,
+          "validation_us": 4750955,
+          "review_submission_us": 694261,
+          "reply_us": 84895,
+          "other_us": 357146,
+          "calibration_us": 2019.5,
+          "raw_processing_us": 6221334,
+          "estimated_processing_us": 5751056.5
+        },
+        {
+          "capture": "run-02",
+          "total_us": 6588091,
+          "key_prep_us": 717937,
+          "validation_us": 4738079,
+          "review_submission_us": 693293,
+          "reply_us": 83945,
+          "other_us": 354837,
+          "calibration_us": 1997.5,
+          "raw_processing_us": 6212106,
+          "estimated_processing_us": 5745843.5
+        },
+        {
+          "capture": "run-03",
+          "total_us": 6607126,
+          "key_prep_us": 713892,
+          "validation_us": 4752065,
+          "review_submission_us": 693316,
+          "reply_us": 83422,
+          "other_us": 364431,
+          "calibration_us": 2006.5,
+          "raw_processing_us": 6222441,
+          "estimated_processing_us": 5755054.5
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "before_pr": "03",
+      "after_pr": "04",
+      "action_order": [
+        "real",
+        "dummy"
+      ],
+      "samples_each": 3,
+      "capture_selection": {
+        "before": [
+          "run-01",
+          "run-02",
+          "run-03"
+        ],
+        "after": [
+          "run-01",
+          "run-02",
+          "run-03"
+        ],
+        "reason": "Prespecified three-review comparison batch. Subsequent PR5 captures seek the separate PR6 workload."
+      },
+      "changed_calls": {
+        "82": [
+          17,
+          16
+        ],
+        "83": [
+          13,
+          12
+        ],
+        "80": [
+          21,
+          20
+        ]
+      }
+    },
+    {
+      "before_pr": "04",
+      "after_pr": "05",
+      "action_order": [
+        "real",
+        "dummy"
+      ],
+      "samples_each": 3,
+      "capture_selection": {
+        "before": [
+          "run-01",
+          "run-02",
+          "run-03"
+        ],
+        "after": [
+          "run-01",
+          "run-02",
+          "run-03"
+        ],
+        "reason": "Prespecified three-review comparison batch. Subsequent PR5 captures seek the separate PR6 workload."
+      },
+      "changed_calls": {
+        "81": [
+          4,
+          3
+        ],
+        "82": [
+          16,
+          15
+        ],
+        "35": [
+          4,
+          3
+        ]
+      }
+    },
+    {
+      "before_pr": "05",
+      "after_pr": "06",
+      "action_order": [
+        "dummy",
+        "real"
+      ],
+      "samples_each": 3,
+      "capture_selection": {
+        "before": [
+          "run-05",
+          "run-06",
+          "run-07"
+        ],
+        "after": [
+          "run-01",
+          "run-02",
+          "run-03"
+        ]
+      },
+      "changed_calls": {
+        "83": [
+          13,
+          12
+        ],
+        "80": [
+          21,
+          20
+        ],
+        "19": [
+          1,
+          0
+        ],
+        "20": [
+          0,
+          1
+        ],
+        "82": [
+          16,
+          15
+        ]
+      }
+    }
+  ],
+  "stage_names": {
+    "1": "Command",
+    "2": "IronwoodKeySetup",
+    "3": "IronwoodAction",
+    "4": "IronwoodRk",
+    "5": "IronwoodValueCommitment",
+    "6": "IronwoodSpendCheck",
+    "7": "IronwoodMembership",
+    "8": "IronwoodOutput",
+    "9": "IronwoodDisplayData",
+    "18": "AccountSpendingKey",
+    "19": "FullViewingKey",
+    "20": "FullViewingKeyAndAsk",
+    "21": "DecipherKeys",
+    "22": "DiversifiedPublicKey",
+    "23": "IncomingViewingKey",
+    "24": "BasepointMultiply",
+    "25": "IncomingDecrypt",
+    "26": "OutgoingRecover",
+    "27": "IronwoodNullifier",
+    "29": "NoteValidation",
+    "30": "KeyAgreement",
+    "31": "IronwoodNoteCommitment",
+    "33": "IronwoodSpendCommitment",
+    "35": "DiversifyHash",
+    "36": "SinsemillaCommit",
+    "37": "SinsemillaHash",
+    "38": "Poseidon",
+    "80": "SdkScalarMultiply",
+    "81": "SdkPointDecompress",
+    "82": "SdkPointCompress",
+    "83": "SdkPointInit",
+    "91": "ReviewFields",
+    "92": "ReviewPreparation",
+    "93": "ReviewSubmission"
+  }
+}

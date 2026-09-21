@@ -1,17 +1,72 @@
 # Flex transaction-review performance
 
-Physical captures used a Ledger Flex running 1.6.1/API 26, USB, and the same
-opt-in ARM32 field backport on both sides. This stack isolates the app and reply
-changes; it does not include that arithmetic backport, diagnostic transport or
-experimental GLV. These are historical measured deltas, not fresh measurements
-of the cleaned PR commits or promises for every transaction.
+## Separate measurements of the key and recipient changes
 
-The wallet prepared a two-action private send with one real input note, one
-dummy spend, one recipient output and change. This is not a measurement of two
-real input notes. Times sum instrumented USB spans through SDK review submission,
-excluding wallet inter-command gaps, human approval and signing. Each pair used
-one real transaction per build. No payloads, keys, addresses or amounts are
-needed for the measurements.
+On 2026-09-21, matched Flex USB captures measured each of the three changes
+separately, using three reviews per build and workload. Each build came from the
+exact code commit below with the same diagnostic transport and function tracing.
+All use registry `pasta_curves` 0.5.2 and Ledger randomized scalar multiplication,
+without the ARM32 backport or experimental GLV. The PR code excludes profiling.
+
+The send has two actions, one real input note plus one padding action, with a
+recipient output and change. Times sum instrumented USB spans through SDK review
+submission, excluding wallet inter-command gaps, human approval and signing.
+They include diagnostic overhead and are not CPU time or display-refresh timing.
+Retry may reuse a prepared transaction; payload identity was not recorded.
+No payloads, keys, addresses or amounts are included in the measurement records.
+
+| Change | Action order | Before → after median | Observed saving |
+|---|---|---:|---:|
+| Combined key derivation, `3c3903d` | Real first | 6.999 → 6.814 s | 0.185 s (2.65%) |
+| Checked recipient reuse, `d65a735` | Real first | 6.814 → 6.633 s | 0.181 s (2.66%) |
+| Validation-key reuse across actions, `04c8ae2` | Padding first | 6.807 → 6.600 s | 0.207 s (3.04%) |
+
+Real-first ranges were 6.993–7.003 s before combined derivation, 6.805–6.826 s
+after it, and 6.628–6.647 s after recipient reuse. The separate padding-first
+comparison ranged 6.803–6.838 s before key reuse and 6.588–6.607 s after it.
+Each pair matched command shape, action order and all unaffected operation counts;
+all 21 completed pre-review commands per capture succeeded, with no trace errors.
+
+Combined derivation returns the normalized authorizing key already computed for
+the full viewing key. Key preparation fell 0.899 → 0.713 s and scalar calls
+21 → 20 when the real input came first.
+
+Recipient reuse carries the account-checked diversifier base and transmission key
+from ownership verification into nullifier validation. Validation fell
+4.961 → 4.781 s; decodes and diversifier hashes each fell 4 → 3, with scalar
+calls unchanged at 20. Canonical/nonidentity checks on untrusted input remain,
+and raw-recipient entry points still validate.
+
+The final extension retains a zeroizing normalized validation scalar under the
+checked account path, including when padding comes first. The later real action
+reuses it while still checking its own randomized key. Key preparation fell
+0.907 → 0.714 s and scalar calls 21 → 20. The scalar is wiped before review or
+reset. This gain applies to the padding-first comparison; it must not be added
+to the two real-first gains. A single real input processed first has no additional
+scalar removal from this extension.
+
+[Measurement data](flex-measurements-2026-09-21.json) includes exact code commits,
+installed application hashes, per-run timings, medians/ranges and operation counts.
+PR4/5 use their scheduled first three real-first captures; PR6 uses a separate
+three-capture padding-first control. Marker-adjusted processing estimates show
+reductions of approximately 186, 171 and 202 ms respectively, but remain estimates.
+Each of the four profiling builds passed the same 29 transaction cases before
+installation, and source projection checks verified equivalence to its PR code.
+
+Multiple-real-input cases have emulator coverage, not new physical timings.
+Matched emulator traces across both pools remove one scalar multiplication for
+two real spends, or two for two real spends after a dummy. Tests use distinct
+notes and randomized keys, reject a bad second key or different account after
+cache reuse, and accept a fresh transaction after rejection. Key tests cover
+both normalization signs and repeated alpha values. Account scope lookup order
+and Ledger randomized multiplication remain unchanged.
+
+## Earlier measurements
+
+These earlier Flex 1.6.1/API 26 USB comparisons used the same opt-in ARM32 field
+backport on both sides and one review per build. They explain the earlier fixes,
+but are not timings of the cleaned code commits in the new configuration.
+Do not combine their absolute timings with the separate measurements above.
 
 | Change | Before | After | Observed saving |
 |---|---:|---:|---:|
@@ -43,30 +98,7 @@ fell 1.696 → 0.042 s; full comparison is 8.514869 → 6.881416 s. Build identi
 are `ed6202a18e0ede42` and `9b2707bab4b702cca`. Locked-device refusal and recovery
 after USB reconnect passed on the physical candidate.
 
-Combined key derivation returns the normalized ASK already used to build the FVK.
-With recipient reuse in the next change, the refreshed pair measured
-6.856293 → 6.547234 s (0.309059 s, 4.5%). Key preparation fell
-0.897058 → 0.711057 s. This was a joint measurement; no isolated total-time
-saving is attributed to this constructor alone. The pair used
-`9b2707bab4b702cca` and `4ae16e854f12007b`.
-
-Recipient reuse carries the account-checked diversifier base and transmission key
-from ownership verification into nullifier validation. Canonical/nonidentity
-checks on untrusted input remain, and raw-recipient entry points still validate.
-In the joint pair above, transaction validation fell 4.825009 → 4.688975 s,
-point decodes 4 → 3 and diversifier hashes 4 → 3. Review submission stayed
-0.694 s. Only this joint pair establishes the 0.309 s total reduction.
-
-The final key-reuse extension keeps the normalized validation scalar across
-actions, including leading dummy actions, and wipes it before review or reset.
-Matched emulator traces across both pools remove one scalar multiplication when
-a dummy comes first, one for two real spends, or two for two real spends after a
-dummy. These are operation counts, not physical timing. The real-first,
-single-real-spend shape above performs no fewer scalar multiplications, so its
-last physical result remains 6.547234 s. No additional total-time gain is claimed.
-
-The distinct-real-note tests also use different randomized keys, reject a bad
-second key or different account after cache reuse, and accept a fresh transaction
-after rejection. Key tests cover both normalization signs and repeated alpha
-values. External/internal address lookup order and Ledger randomized scalar
-multiplication are unchanged. No GLV is enabled.
+The earlier joint key/recipient pair used `9b2707bab4b702cca` and
+`4ae16e854f12007b`. Key preparation fell 0.897058 → 0.711057 s and validation
+4.825009 → 4.688975 s. Its 0.309059 s total saving belonged to both changes
+combined; the new separate captures above now isolate their individual effects.
