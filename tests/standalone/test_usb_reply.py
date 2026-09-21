@@ -1,4 +1,4 @@
-"""Flex USB replies and pending review regression tests."""
+"""USB replies and pending review regression tests."""
 import concurrent.futures
 import contextlib
 import types
@@ -18,8 +18,8 @@ VERSION = bytes.fromhex('e0c4000000')
 
 
 def test_usb_reply_independent_of_new_ticker(backend, firmware):
-    if firmware != Firmware.FLEX or not isinstance(backend, SpeculosBackend):
-        pytest.skip("Immediate USB replies are enabled only on Flex")
+    if firmware not in (Firmware.FLEX, Firmware.STAX, Firmware.NANOSP) or not isinstance(backend, SpeculosBackend):
+        pytest.skip("This test requires Speculos on Flex, Stax or Nano S Plus")
     expected = backend.exchange_raw(VERSION).data
     backend.pause_ticker()
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
