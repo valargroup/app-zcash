@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- Remove the pre-reply receive wait for Flex USB HID while retaining receive-loop
-  event servicing and the command-in-progress guard during review.
+- Remove the USB HID pre-reply receive wait on Flex, Stax and Nano S Plus with
+  NBGL while retaining receive-loop event servicing and the command-in-progress
+  guard during review.
 
 - Reduce repeated account-key derivation, point decoding, and diversifier hashing
   while validating shielded transactions, preserving per-action checks. Reuse full
