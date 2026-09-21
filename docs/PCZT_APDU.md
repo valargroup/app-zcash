@@ -14,6 +14,8 @@ components.
 
 ## Common rules
 
+- `PCZT_POINT_COORDINATES` is an optional command inserted within a shielded
+  action as described below; its P1/P2 bytes select a pool and point, not chunks.
 - Both shielded pools share a transaction-scoped account-key cache. Each action's
   complete derivation path must match the first action's path, including on cache
   hits. FVK and viewing-key derivation are reused; randomized verification keys,
@@ -210,6 +212,42 @@ action is accepted:
 - Non-zero undecryptable outputs are rejected.
 
 Dummy spends are not represented by this compact APDU subset.
+
+## PCZT_POINT_COORDINATES
+
+`CLA=0xE0`, `INS=0x5A`. P1 selects Orchard (`0x00`) or Ironwood (`0x01`).
+P2 selects the current output's ephemeral key (`0x00`) or recipient transmission
+key `pk_d` (`0x01`), or both (`0x02`). Other P1/P2 values return `0x6B00` and reset
+the transaction.
+
+Send zero, one, or both coordinate packets immediately after the action's output
+small-fields packet (`cmx || ephemeral_key`), before the first `enc_ciphertext`
+packet. Each selected point may be supplied only once per action, in either order.
+Each point is 64 bytes: canonical little-endian `x [u8; 32]` followed by
+canonical little-endian `y [u8; 32]`. A single-point payload is exactly 64 bytes.
+The batched form is exactly 128 bytes, ephemeral point followed by recipient point;
+it saves one command/reply when both are available. Continue the ordinary action
+packets afterward; the coordinate command neither advances their parser nor
+changes their P1/P2 flags.
+
+The device checks coordinate ranges, SDK curve membership and nonidentity. It
+binds ephemeral coordinates to the already received ephemeral key immediately.
+Recipient coordinates must match the subsequently received output metadata,
+including when incoming decryption succeeds or the output is a dummy. If outgoing
+recovery uses them, they must also match the key in its authenticated plaintext.
+All comparisons use the exact canonical compressed encoding, including the y sign.
+
+Coordinates are helpers, not transaction fields: the original compressed bytes
+remain the inputs to transaction hashes, commitments and key derivation. Normal
+ownership, ciphertext, commitment, review and signing checks still apply. The
+device retains no SDK point allocation between APDUs and discards the helpers
+after each action and on reset or error. Omitted helpers use ordinary decompression.
+
+Wrong payload length returns `0x6700`; wrong pool or timing returns `0xB007`;
+invalid, duplicate or mismatched points return `0x6A80`. All reset the transaction.
+Older apps return `0x6D00`; clients should negotiate support or restart the complete
+transaction without helpers. The endpoint does not accept derived bases or secret
+material. Existing clients need no changes.
 
 ## PCZT_IRONWOOD_ACTION
 

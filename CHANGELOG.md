@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Accept optional public point coordinates during shielded PCZT validation,
+  checking their validity and transaction binding before using them to avoid
+  decompression. Existing compressed-point commands remain compatible.
+
 - Use the published SDK's new I/O path for immediate replies across supported
   devices, retaining locked-device refusal and review-time command rejection.
   Reject APDUs whose payload length differs from their declared length.

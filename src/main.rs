@@ -68,14 +68,17 @@ use crate::consts::{
     P1_GET_PUBLIC_KEY_DISPLAY, P1_GET_PUBLIC_KEY_NO_DISPLAY, P1_GET_VK_CONTINUE, P1_GET_VK_FIRST,
     P1_HASH_INPUT_START_FIRST, P1_HASH_INPUT_START_NEXT, P1_LAST, P1_NEXT,
     P2_FINALIZE_FULL_DEFAULT, P2_HASH_INPUT_START_CONTINUE, P2_HASH_INPUT_START_SAPLING,
-    P2_PCZT_CONTINUE, P2_PCZT_FINISHED, P2ShieldedAddrMode, P2VkMode,
+    P2_PCZT_CONTINUE, P2_PCZT_FINISHED, P2PcztPoints, P2ShieldedAddrMode, P2VkMode,
 };
 use crate::consts::{
-    INS_PCZT_IRONWOOD_ACTION, INS_PCZT_SIGN_IRONWOOD, MAX_PCZT_IRONWOOD_ACTIONS_NUMBER,
+    INS_PCZT_IRONWOOD_ACTION, INS_PCZT_POINT_COORDINATES, INS_PCZT_SIGN_IRONWOOD,
+    MAX_PCZT_IRONWOOD_ACTIONS_NUMBER,
 };
 #[cfg(feature = "heap_probe")]
 use crate::handlers::heap_probe::handler_heap_probe;
-use crate::handlers::pczt::{handler_pczt_ironwood_action, handler_pczt_sign_ironwood};
+use crate::handlers::pczt::{
+    handler_pczt_ironwood_action, handler_pczt_point_coordinates, handler_pczt_sign_ironwood,
+};
 use crate::swap::panic_handler::get_swap_panic_handler;
 use crate::{
     consts::{
@@ -189,6 +192,10 @@ pub enum Instruction {
     },
     HashSign,
     PcztHeader,
+    PcztPointCoordinates {
+        ironwood: bool,
+        points: P2PcztPoints,
+    },
     PcztTransparentInput {
         first: bool,
         last: bool,
@@ -280,6 +287,10 @@ impl TryFrom<ApduHeader> for Instruction {
                 is_change: value.p1 == P1_FINALIZE_FULL_CHANGEINFO,
             }),
             (INS_HASH_SIGN, 0, 0) => Ok(Instruction::HashSign),
+            (INS_PCZT_POINT_COORDINATES, 0..=1, 0..=2) => Ok(Instruction::PcztPointCoordinates {
+                ironwood: value.p1 == 1,
+                points: P2PcztPoints::try_from(value.p2)?,
+            }),
             (INS_PCZT_HEADER, P1_FIRST, P2_PCZT_CONTINUE) => Ok(Instruction::PcztHeader),
             (INS_PCZT_TRANSPARENT_INPUT, p1, P2_PCZT_CONTINUE)
                 if p1 == P1_FIRST || p1 == P1_NEXT || p1 == P1_LAST =>
@@ -333,7 +344,8 @@ impl TryFrom<ApduHeader> for Instruction {
                 })
             }
             (
-                INS_PCZT_HEADER
+                INS_PCZT_POINT_COORDINATES
+                | INS_PCZT_HEADER
                 | INS_PCZT_TRANSPARENT_INPUT
                 | INS_PCZT_TRANSPARENT_OUTPUT
                 | INS_PCZT_ORCHARD_ACTION
@@ -558,6 +570,7 @@ pub fn normal_main(swap_params: Option<&CreateTxParams>) -> bool {
             | Instruction::HashFinalizeFull { .. }
             | Instruction::HashSign
             | Instruction::PcztHeader
+            | Instruction::PcztPointCoordinates { .. }
             | Instruction::PcztTransparentInput { .. }
             | Instruction::PcztTransparentOutput { .. }
             | Instruction::PcztOrchardAction { .. }
@@ -612,6 +625,9 @@ fn handle_apdu<'a>(
         }
         Instruction::HashSign => handler_hash_sign(command, ctx),
         Instruction::PcztHeader => handler_pczt_header(command, ctx),
+        Instruction::PcztPointCoordinates { ironwood, points } => {
+            handler_pczt_point_coordinates(command, ctx, *ironwood, *points)
+        }
         Instruction::PcztTransparentInput { first, last } => {
             handler_pczt_transparent_input(command, ctx, *first, *last)
         }

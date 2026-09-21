@@ -16,6 +16,7 @@ use ledger_device_sdk::hash::HashInit as _;
 use ledger_device_sdk::hash::blake2::Blake2b_256;
 use ledger_device_sdk::libcall::swap::CreateTxParams;
 use ledger_device_sdk::log::{debug, error, info};
+use ledger_zcash_crypto::ValidatedPallasPoint;
 use zcash_address::unified::{Address as UnifiedAddress, Encoding, Receiver};
 use zcash_encoding::CompactSize;
 use zcash_primitives::transaction::TxVersion;
@@ -40,7 +41,8 @@ use crate::parser::compute::{
 use crate::parser::orchard_decipher::{
     DecipheredOrchardOutput, ORCHARD_ENC_CIPHERTEXT_SIZE, ORCHARD_NOTE_PLAINTEXT_PREFIX_SIZE,
     ORCHARD_OUT_CIPHERTEXT_SIZE, ORCHARD_RAW_ADDRESS_SIZE, OrchardActionCiphertext,
-    OrchardCompactAction, OrchardDecipherKeys, decipher_compact_value, decipher_value_with_ovk,
+    OrchardCompactAction, OrchardDecipherKeys, decipher_compact_value_with_point,
+    decipher_value_with_ovk_and_point,
 };
 use crate::parser::{HASH_SIZE, ORCHARD_MEMO_SIZE};
 use crate::tx::{Hashers, TransferType, TxInfo, TxOutput, TxOutputMemo, TxPool, TxSigningState};
@@ -366,6 +368,8 @@ struct PcztCurrentActionState {
     output_rseed: Option<[u8; 32]>,
     cmx: [u8; 32],
     ephemeral_key: [u8; 32],
+    ephemeral_point: Option<ValidatedPallasPoint>,
+    recipient_point: Option<ValidatedPallasPoint>,
     out_ciphertext: Option<[u8; ORCHARD_OUT_CIPHERTEXT_SIZE]>,
     output_recipient: [u8; ORCHARD_RAW_ADDRESS_SIZE],
     output_value: u64,
@@ -391,6 +395,8 @@ impl PcztCurrentActionState {
             output_rseed: None,
             cmx: [0; 32],
             ephemeral_key: [0; 32],
+            ephemeral_point: None,
+            recipient_point: None,
             out_ciphertext: None,
             output_recipient: [0; ORCHARD_RAW_ADDRESS_SIZE],
             output_value: 0,

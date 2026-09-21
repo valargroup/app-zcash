@@ -373,3 +373,20 @@ must be the one this action spends from; otherwise the command returns
 `ConditionsOfUseNotSatisfied` (`0x6986`) and no signature is produced — the same
 binding as on the Orchard and transparent signing paths, and an Ironwood output
 decrypting under the internal viewing key is change just as an Orchard one is.
+
+## INS_PCZT_POINT_COORDINATES
+
+- INS: `0x5A`
+- P1: `0x00` for Orchard, `0x01` for Ironwood.
+- P2: `0x00` for the output ephemeral key, `0x01` for the output recipient key,
+  or `0x02` for both.
+- Data: `x [u8; 32] || y [u8; 32]` per point, canonical little-endian. The batched
+  form carries 128 bytes, ephemeral point first.
+- Response: empty.
+
+Optional, once per point, after the current action's output small fields and
+before its ciphertext. The device validates the point and binds it to the
+original encoded transaction field before use. This command does not change the
+transaction encoding or enable signing before review. See
+[PCZT_APDU.md](./PCZT_APDU.md#pczt_point_coordinates) for binding, lifetime and
+error rules.

@@ -119,6 +119,7 @@ class InsType(IntEnum):
     PCZT_SIGN_ORCHARD = 0x57
     PCZT_IRONWOOD_ACTION = 0x58
     PCZT_SIGN_IRONWOOD = 0x59
+    PCZT_POINT_COORDINATES = 0x5A
     # Answered only by a build carrying the `heap_probe` cargo feature, which no released
     # application does. A build without it refuses this instruction, and a test relying on it
     # must treat that refusal as the expected answer rather than a failure.
@@ -184,6 +185,32 @@ class ZcashCommandSender:
         self.pczt_transparent_inputs: list[PcztTransparentInput] = []
         self.pczt_transparent_outputs: list[PcztTransparentOutput] = []
         self.last_response: ApduResponse | RAPDU | None = None
+
+    def pczt_point_coordinates(
+        self, x_le: bytes, y_le: bytes, *, ironwood: bool = False, recipient: bool = False,
+    ) -> RAPDU:
+        """Supply a public point after the current action's output small-fields packet.
+
+        The device validates the coordinates and binds them to the ephemeral key
+        or output recipient. Both coordinates are canonical 32-byte little-endian values.
+        """
+        if len(x_le) != 32 or len(y_le) != 32:
+            raise ValueError("Pallas coordinates must each be 32 bytes")
+        return self.backend.exchange(
+            cla=CLA, ins=InsType.PCZT_POINT_COORDINATES,
+            p1=int(ironwood), p2=int(recipient), data=x_le + y_le,
+        )
+
+    def pczt_output_points(
+        self, ephemeral_coordinates: bytes, recipient_coordinates: bytes, *, ironwood: bool = False,
+    ) -> RAPDU:
+        """Supply both output points in one APDU, each encoded as little-endian x || y."""
+        if len(ephemeral_coordinates) != 64 or len(recipient_coordinates) != 64:
+            raise ValueError("Each Pallas point must contain 64 coordinate bytes")
+        return self.backend.exchange(
+            cla=CLA, ins=InsType.PCZT_POINT_COORDINATES, p1=int(ironwood), p2=2,
+            data=ephemeral_coordinates + recipient_coordinates,
+        )
 
     def exchange_raw(self, data: str) -> tuple[int, bytes]:
         data_bytes = bytes.fromhex(data)

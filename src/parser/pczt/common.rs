@@ -1,6 +1,76 @@
 use super::*;
+use crate::consts::P2PcztPoints;
 
 impl PcztParser {
+    /// Accepts optional coordinates only between an action's output header and
+    /// ciphertext. They belong to this action and are discarded with its scratch state.
+    pub fn parse_point_coordinates(
+        &mut self,
+        data: &[u8],
+        ironwood: bool,
+        points: P2PcztPoints,
+    ) -> Result<(), ParserError> {
+        let expected = if ironwood {
+            PcztParserState::WaitIronwoodEncCiphertextLen
+        } else {
+            PcztParserState::WaitOrchardEncCiphertextLen
+        };
+        if self.state != expected {
+            return Err(ParserError::from_sw(AppSW::BadState));
+        }
+        let kinds: &[bool] = match points {
+            P2PcztPoints::Ephemeral => &[false],
+            P2PcztPoints::Recipient => &[true],
+            P2PcztPoints::Both => &[false, true],
+        };
+        if data.len() != 64 * kinds.len() {
+            return Err(ParserError::from_sw(AppSW::WrongApduLength));
+        }
+        for (&recipient, coordinates) in kinds.iter().zip(data.chunks_exact(64)) {
+            self.set_point_coordinates(coordinates, recipient)?;
+        }
+        Ok(())
+    }
+
+    fn set_point_coordinates(
+        &mut self,
+        coordinates: &[u8],
+        recipient: bool,
+    ) -> Result<(), ParserError> {
+        let slot = if recipient {
+            &mut self.current_action.recipient_point
+        } else {
+            &mut self.current_action.ephemeral_point
+        };
+        if slot.is_some() {
+            return Err(ParserError::from_str("Duplicate PCZT point coordinates"));
+        }
+        let mut x = [0; 32];
+        let mut y = [0; 32];
+        x.copy_from_slice(&coordinates[..32]);
+        y.copy_from_slice(&coordinates[32..]);
+        let point = ValidatedPallasPoint::from_coordinates(x, y)
+            .map_err(|_| ParserError::from_str("Invalid PCZT point coordinates"))?;
+        if !recipient && !point.matches_encoding(&self.current_action.ephemeral_key) {
+            return Err(ParserError::from_str("PCZT ephemeral point mismatch"));
+        }
+        *slot = Some(point);
+        Ok(())
+    }
+
+    /// Bind supplied recipient coordinates even if IVK decryption succeeds or
+    /// this is a dummy output, so an unused helper cannot escape validation.
+    pub(super) fn check_output_recipient_point(&self) -> Result<(), ParserError> {
+        if let Some(point) = &self.current_action.recipient_point {
+            let mut encoded = [0; 32];
+            encoded.copy_from_slice(&self.current_action.output_recipient[11..]);
+            if !point.matches_encoding(&encoded) {
+                return Err(ParserError::from_str("PCZT recipient point mismatch"));
+            }
+        }
+        Ok(())
+    }
+
     /// Reuses account material only after checking the complete cached path.
     /// The validation key is wiped before review; each real action still checks rk.
     pub(super) fn prepare_shielded_account_keys(
