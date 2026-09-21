@@ -120,8 +120,10 @@ def test_usb_reply_overlap_preserves_review(backend, scenario_navigator, usb_str
             review()
         assert rejected.value.status == Errors.SW_DENY
         assert not rejected.value.data
+        backend.wait_for_home_screen(timeout=10)
         with pytest.raises(ExceptionRAPDU) as denied:
             client.pczt_sign_ironwood(action_index=0)
+        assert denied.value.status == Errors.SW_CONDITIONS_OF_USE_NOT_SATISFIED
         assert not denied.value.data
     # Both control and candidate have a transient post-sign status screen.
     # Check readiness after that screen rather than racing a new APDU into it.
