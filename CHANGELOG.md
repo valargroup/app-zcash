@@ -8,8 +8,9 @@
   avoid extra commands. Existing compressed-point commands remain compatible.
 
 - Use the SDK's new I/O path for immediate replies across supported devices,
-  retaining review-time command rejection. Refuse locked-device packets before
-  built-in commands or framing checks, including during review.
+  retaining review-time command rejection and the PIN check before Zcash command
+  dispatch. Use the published SDK for built-in commands and framing checks, which
+  can respond while locked instead of returning the legacy PIN error.
   Reject APDUs whose payload length differs from their declared length.
   Return control to Exchange after a swap panic even if its error reply fails.
 

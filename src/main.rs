@@ -523,7 +523,7 @@ pub fn normal_main(swap_params: Option<&CreateTxParams>) -> bool {
 
     loop {
         let command = comm.next_command();
-        // Recheck commands queued by a UI callback before dispatch.
+        // Gate app commands here. The SDK handles built-in commands before returning.
         let locked = unsafe {
             use ledger_device_sdk::sys::{
                 BOLOS_TRUE, os_global_pin_is_validated, os_perso_is_pin_set,
