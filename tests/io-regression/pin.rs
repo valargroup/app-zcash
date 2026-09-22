@@ -100,6 +100,7 @@ struct Os {
     unlocked: bool,
     builtin_calls: usize,
     review_callback: Option<fn() -> bool>,
+    fail_send: bool,
 }
 thread_local! { static OS: RefCell<Os> = RefCell::new(Os::default()); }
 
@@ -116,7 +117,7 @@ mod seph {
     }
     pub fn io_tx(transport: u8, buffer: &[u8], length: usize) -> i32 {
         super::OS.with_borrow_mut(|os| os.replies.push((transport, buffer[..length].to_vec())));
-        length as i32
+        super::OS.with_borrow(|os| if os.fail_send { -1 } else { length as i32 })
     }
 }
 mod io_callbacks {
@@ -189,6 +190,23 @@ fn locked_commands() -> Vec<Vec<u8>> {
 }
 fn reset() {
     OS.with_borrow_mut(|os| *os = Os::default());
+}
+
+#[test]
+fn fallible_reply_returns_transport_errors_without_panicking() {
+    reset();
+    OS.with_borrow_mut(|os| os.fail_send = true);
+    let mut comm = io::Comm::<273>::new();
+    assert!(matches!(
+        comm.begin_response().send(io::StatusWords::Panic),
+        Err(io::CommError::IoError)
+    ));
+    assert!(
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _ = comm.send(&[], io::StatusWords::Panic);
+        }))
+        .is_err()
+    );
 }
 
 #[test]

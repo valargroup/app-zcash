@@ -25,6 +25,17 @@ def main():
         subprocess.run(["rustc", "--edition=2024", "--test", str(work / "pin.rs"),
                         "-o", str(binary)], check=True)
         subprocess.run([str(binary), "--test-threads=1"], check=True)
+        shutil.copyfile(root / "src/swap/panic_handler.rs", work / "swap_panic_handler.rs")
+        shutil.copyfile(Path(__file__).with_name("swap_panic.rs"), work / "swap_panic.rs")
+        for failure in (False, True):
+            binary = work / "swap-panic"
+            command = ["rustc", "--edition=2024", "-C", "panic=abort",
+                       str(work / "swap_panic.rs"), "-o", str(binary)]
+            if failure:
+                command += ["--cfg", "send_failure"]
+            subprocess.run(command, check=True)
+            subprocess.run([str(binary)], check=True)
+            print(f"Swap panic returns to Exchange with send_failure={failure}", flush=True)
 
 
 if __name__ == "__main__":

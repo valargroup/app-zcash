@@ -6,6 +6,7 @@
   retaining review-time command rejection. Refuse locked-device packets before
   built-in commands or framing checks, including during review.
   Reject APDUs whose payload length differs from their declared length.
+  Return control to Exchange after a swap panic even if its error reply fails.
 
 - Reduce repeated account-key derivation, point decoding, and diversifier hashing
   while validating shielded transactions, preserving per-action checks. Reuse full
