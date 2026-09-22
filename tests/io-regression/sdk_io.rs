@@ -6,14 +6,13 @@ extern crate self as ledger_secure_sdk_sys;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 
-#[path = "../../vendor/ledger_device_sdk/src/io_new.rs"]
+#[path = "sdk_io/mod.rs"]
 mod io_new;
 use io_new as io;
-#[path = "../../vendor/ledger_device_sdk/src/seph.rs"]
+#[path = "sdk_seph.rs"]
 mod sdk_seph;
 
 // Only platform bindings and the legacy status/header definitions are substituted.
-pub const BOLOS_TRUE: u32 = 0xaa;
 pub const OS_IO_PACKET_TYPE_NONE: u8 = 0;
 pub const OS_IO_PACKET_TYPE_SEPH: u8 = 1;
 pub const OS_IO_PACKET_TYPE_SE_EVT: u8 = 2;
@@ -53,7 +52,6 @@ mod io_legacy {
     #[derive(Clone, Copy)]
     pub enum StatusWords {
         Ok = 0x9000,
-        DeviceLocked = 0x5515,
         BadLen = 0x6700,
         BadCla = 0x6e00,
         BadIns = 0x6d00,
@@ -89,15 +87,11 @@ mod io_legacy {
 
 struct Packet {
     bytes: Vec<u8>,
-    pin_set: bool,
-    unlocked: bool,
 }
 #[derive(Default)]
 struct Os {
     incoming: VecDeque<Packet>,
     replies: Vec<(u8, Vec<u8>)>,
-    pin_set: bool,
-    unlocked: bool,
     builtin_calls: usize,
     review_callback: Option<fn() -> bool>,
     fail_send: bool,
@@ -109,8 +103,6 @@ mod seph {
     pub fn io_rx(buffer: &mut [u8], _: bool) -> i32 {
         super::OS.with_borrow_mut(|os| {
             let packet = os.incoming.pop_front().expect("unexpected receive");
-            os.pin_set = packet.pin_set;
-            os.unlocked = packet.unlocked;
             buffer[..packet.bytes.len()].copy_from_slice(&packet.bytes);
             packet.bytes.len() as i32
         })
@@ -129,12 +121,6 @@ mod io_callbacks {
         super::OS.with_borrow_mut(|os| os.review_callback = Some(next));
     }
 }
-pub unsafe fn os_perso_is_pin_set() -> u32 {
-    OS.with_borrow(|os| if os.pin_set { BOLOS_TRUE } else { 0 })
-}
-pub unsafe fn os_global_pin_is_validated() -> u32 {
-    OS.with_borrow(|os| if os.unlocked { BOLOS_TRUE } else { 0 })
-}
 pub unsafe fn os_registry_get_current_app_tag(_: u32, _: *mut u8, _: u32) -> u32 {
     OS.with_borrow_mut(|os| os.builtin_calls += 1);
     0
@@ -143,7 +129,7 @@ pub unsafe fn os_flags() -> u32 {
     0
 }
 pub fn exit_app(_: u8) -> ! {
-    panic!("locked quit command executed")
+    panic!("unexpected quit command")
 }
 #[derive(Default)]
 pub struct cx_ecfp_384_public_key_t;
@@ -155,7 +141,7 @@ pub unsafe fn os_pki_load_certificate(
     _: *mut u8,
     _: *mut cx_ecfp_384_public_key_t,
 ) -> u32 {
-    panic!("locked certificate command executed")
+    panic!("unexpected certificate command")
 }
 
 const APP_CLA: u8 = 0xe0;
@@ -163,30 +149,11 @@ const APP_INS: u8 = 0xc4;
 const VERSION: [u8; 5] = [APP_CLA, APP_INS, 0, 0, 0];
 const USB: u8 = OS_IO_PACKET_TYPE_USB_HID_APDU;
 const BLE: u8 = OS_IO_PACKET_TYPE_BLE_APDU;
-const LOCKED: [u8; 2] = [0x55, 0x15];
 
-fn enqueue(transport: u8, data: &[u8], pin_set: bool, unlocked: bool) {
+fn enqueue(transport: u8, data: &[u8]) {
     let mut bytes = vec![transport];
     bytes.extend_from_slice(data);
-    OS.with_borrow_mut(|os| {
-        os.incoming.push_back(Packet {
-            bytes,
-            pin_set,
-            unlocked,
-        })
-    });
-}
-fn locked_commands() -> Vec<Vec<u8>> {
-    vec![
-        VERSION.to_vec(),
-        vec![0xb0, 1, 0, 0, 0],
-        vec![0xb0, 0xa7, 0, 0, 0],
-        vec![0xb0, 6, 0, 0, 0],
-        vec![0xff, APP_INS, 0, 0, 0],
-        vec![APP_CLA, APP_INS, 0, 0, 2, 1],
-        vec![],
-        vec![APP_CLA],
-    ]
+    OS.with_borrow_mut(|os| os.incoming.push_back(Packet { bytes }));
 }
 fn reset() {
     OS.with_borrow_mut(|os| *os = Os::default());
@@ -210,38 +177,12 @@ fn fallible_reply_returns_transport_errors_without_panicking() {
 }
 
 #[test]
-fn locked_packets_are_refused_before_dispatch_on_every_transport() {
+fn builtins_and_errors_follow_published_sdk_behavior() {
     reset();
-    let mut expected = Vec::new();
-    for transport in [
-        OS_IO_PACKET_TYPE_RAW_APDU,
-        USB,
-        OS_IO_PACKET_TYPE_USB_WEBUSB_APDU,
-        BLE,
-    ] {
-        for bytes in locked_commands() {
-            enqueue(transport, &bytes, true, false);
-            expected.push((transport, LOCKED.to_vec()));
-        }
-    }
-    enqueue(USB, &VERSION, true, true);
-    let mut comm = io::Comm::<273>::new();
-    comm.set_expected_cla(APP_CLA);
-    let command = comm.next_command();
-    assert_eq!(command.decode::<io::ApduHeader>().unwrap().ins, APP_INS);
-    OS.with_borrow(|os| {
-        assert_eq!(os.replies, expected);
-        assert_eq!(os.builtin_calls, 0);
-    });
-}
-
-#[test]
-fn unlocked_builtins_and_errors_still_work() {
-    reset();
-    enqueue(USB, &[0xb0, 1, 0, 0, 0], true, true);
-    enqueue(USB, &[0xff, APP_INS, 0, 0, 0], true, true);
-    enqueue(USB, &[APP_CLA, APP_INS, 0, 0, 2, 1], true, true);
-    enqueue(USB, &VERSION, true, true);
+    enqueue(USB, &[0xb0, 1, 0, 0, 0]);
+    enqueue(USB, &[0xff, APP_INS, 0, 0, 0]);
+    enqueue(USB, &[APP_CLA, APP_INS, 0, 0, 2, 1]);
+    enqueue(USB, &VERSION);
     let mut comm = io::Comm::<273>::new();
     comm.set_expected_cla(APP_CLA);
     let _ = comm.next_command();
@@ -257,45 +198,25 @@ fn unlocked_builtins_and_errors_still_work() {
 }
 
 #[test]
-fn no_configured_pin_preserves_legacy_behavior() {
-    reset();
-    enqueue(USB, &VERSION, false, false);
-    let mut comm = io::Comm::<273>::new();
-    comm.next_command().reply(&[], io::StatusWords::Ok).unwrap();
-    OS.with_borrow(|os| assert_eq!(os.replies, [(USB, vec![0x90, 0x00])]));
-}
-
-#[test]
-fn locked_review_commands_preserve_the_original_reply() {
+fn overlapping_review_commands_preserve_the_original_reply() {
     reset();
     static STORAGE: io::CommStorage = io::CommStorage::new();
     let comm = io::init_comm(&STORAGE);
-    enqueue(USB, &VERSION, true, true);
+    enqueue(USB, &VERSION);
     let comm = comm.next_command().into_comm();
-    for bytes in locked_commands() {
-        enqueue(BLE, &bytes, true, false);
-    }
-    enqueue(
-        OS_IO_PACKET_TYPE_SEPH,
-        &[SEPROXYHAL_TAG_TICKER_EVENT as u8],
-        true,
-        false,
-    );
     let callback = OS.with_borrow(|os| os.review_callback.unwrap());
-    assert!(!callback());
-    OS.with_borrow(|os| {
-        assert_eq!(
-            os.replies,
-            vec![(BLE, LOCKED.to_vec()); locked_commands().len()]
-        );
-        assert_eq!(os.builtin_calls, 0);
-    });
-    // The original command must still be in progress after rejecting locked packets.
-    enqueue(BLE, &VERSION, true, true);
-    assert!(!callback());
+    let mut expected = Vec::new();
+    for transport in [
+        OS_IO_PACKET_TYPE_RAW_APDU,
+        USB,
+        OS_IO_PACKET_TYPE_USB_WEBUSB_APDU,
+        BLE,
+    ] {
+        enqueue(transport, &VERSION);
+        assert!(!callback());
+        expected.push((transport, vec![0x69, 0x01]));
+    }
     comm.send(&[42], io::StatusWords::Ok).unwrap();
-    OS.with_borrow(|os| {
-        assert_eq!(os.replies[os.replies.len() - 2], (BLE, vec![0x69, 0x01]));
-        assert_eq!(os.replies.last(), Some(&(USB, vec![42, 0x90, 0x00])));
-    });
+    expected.push((USB, vec![42, 0x90, 0x00]));
+    OS.with_borrow(|os| assert_eq!(os.replies, expected));
 }

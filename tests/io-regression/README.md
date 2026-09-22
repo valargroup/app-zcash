@@ -1,21 +1,19 @@
 # I/O boundary regressions
 
-Run `python3 tests/io-regression/run.py` in the Ledger build container. These host
-tests compile the vendored SDK's actual command decoder, BOLOS handlers, and review
-callbacks with scripted OS calls and transport packets. They do not install test
-hooks in the application or link test code into device builds.
-
-The tests cover locked application and built-in commands, malformed frames and
-wrong classes over every supported packet transport, unlocking, and review-time
-rejection without changing the original command's state or reply transport. They
-also preserve the legacy behavior when no PIN is configured.
-
-`--sdk-dir PATH` runs the same tests against another SDK source tree. The pristine
-1.37.0 release fails the locked-command and review tests. Physical PIN screens,
-USB/BLE delivery, and device OS behavior still require hardware checks.
+Run `python3 tests/io-regression/run.py` in the Ledger build container. The runner
+uses `cargo metadata --locked` to locate the same published SDK used by the app.
+It compiles the SDK's command decoder, built-in handlers, and review callbacks
+with scripted OS calls and transport packets. The tests check framing errors,
+built-in replies, and overlapping command rejection without rerouting the
+original reply.
 
 The runner also compiles the application's actual swap panic handler in a small
 `no_std` host executable. A failed error response must still return to Exchange,
 without another panic. Both successful and failed sends are exercised. A separate
 test checks the real SDK's fallible and panicking send contracts against a failing
 transport. None of these fixtures are linked into the application.
+
+`--sdk-dir PATH` runs the SDK tests against another source tree. These host tests
+do not exercise the app's PIN check or physical PIN screens. Device lock behavior
+and physical USB/BLE delivery still require hardware checks. The accepted
+locked-device behavior is documented in [APDU.md](../../docs/APDU.md).
