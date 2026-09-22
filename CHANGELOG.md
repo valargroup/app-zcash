@@ -16,7 +16,8 @@
   coordinates for fixed and locally derived points while retaining Ledger’s
   randomized multiplication and validation of external points. Retain normalized
   validation keys across actions under the checked account path and wipe them
-  before review or reset.
+  before review or reset. Combine Sinsemilla additions while preserving their
+  exceptional cases.
 
 ## 3.9.3
 
