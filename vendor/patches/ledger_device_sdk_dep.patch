@@ -1,0 +1,39 @@
+# Ledger PIN-refusal fix for the vendored `ledger_device_sdk` crate.
+# Base: crates.io package ledger_device_sdk 1.37.0
+# Archive SHA256: 62e6b3aab652b5520456b20ef1db54982a93ed5912378100ec1d32560c55972f
+# Upstream revision: 8057ecc256cf6fa2af5254031cd9fa95671e5f5e
+# Apply from vendor/ledger_device_sdk with: patch -p1 -E < ../patches/ledger_device_sdk_dep.patch
+# Regenerate with vendor/generate_patches.sh.
+# Check the PIN before framing and BOLOS dispatch on both normal and NBGL receive paths.
+# Reject on the incoming transport without clearing or rerouting an in-progress command.
+#
+--- a/src/io_new/event.rs
++++ b/src/io_new/event.rs
+@@ -1,4 +1,4 @@
+-use super::{ApduError, ApduHeader, Comm};
++use super::{ApduError, ApduHeader, Comm, StatusWords};
+ use crate::seph;
+ 
+ #[cfg(any(target_os = "nanosplus", target_os = "nanox"))]
+@@ -41,7 +41,20 @@
+             PacketTypes::PacketTypeRawApdu
+             | PacketTypes::PacketTypeUsbHidApdu
+             | PacketTypes::PacketTypeUsbWebusbApdu
+-            | PacketTypes::PacketTypeBleApdu => Self::decode_apdu(comm, pt, 1, len),
++            | PacketTypes::PacketTypeBleApdu => {
++                // Refuse locked-device packets before parsing or BOLOS dispatch, including
++                // during review. Do not disturb the original command's reply state.
++                let locked = unsafe {
++                    os_perso_is_pin_set() == BOLOS_TRUE.try_into().unwrap()
++                        && os_global_pin_is_validated() != BOLOS_TRUE.try_into().unwrap()
++                };
++                if locked {
++                    comm.reject_apdu(pt, StatusWords::DeviceLocked);
++                    DecodedEventType::Ignored
++                } else {
++                    Self::decode_apdu(comm, pt, 1, len)
++                }
++            },
+ 
+             _ => DecodedEventType::Ignored,
+         };
