@@ -972,7 +972,7 @@ impl PcztParser {
             .randomized_verification_key_bytes(&alpha)
             .map_err(|_| ParserError::from_sw(AppSW::TechnicalProblem))?;
 
-        if expected_rk != self.current_action.rk {
+        if <[u8; 32]>::from(expected_rk) != self.current_action.rk {
             return Err(ParserError::from_str(
                 "PCZT orchard rk does not match alpha and signing key",
             ));
