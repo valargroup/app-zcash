@@ -1,28 +1,34 @@
 """Compile the real SDK I/O sources against a scripted host OS and transport."""
 import argparse
-from pathlib import Path
+import json
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     root = Path(__file__).resolve().parents[2]
-    parser.add_argument("--sdk-dir", type=Path, default=root / "vendor/ledger_device_sdk")
+    parser.add_argument("--sdk-dir", type=Path, help="Override the SDK source resolved by Cargo")
     args = parser.parse_args()
+    sdk_dir = args.sdk_dir
+    if sdk_dir is None:
+        metadata = json.loads(subprocess.check_output(
+            ["cargo", "metadata", "--locked", "--format-version", "1"], cwd=root,
+        ))
+        sdk, = (package for package in metadata["packages"]
+                if package["name"] == "ledger_device_sdk")
+        sdk_dir = Path(sdk["manifest_path"]).parent
     with tempfile.TemporaryDirectory(prefix="ledger-io-tests-") as directory:
         work = Path(directory)
         # Preserve the SDK's module tree under mod.rs so #[path] resolves its children.
-        shutil.copytree(args.sdk_dir / "src/io_new", work / "sdk_io")
-        shutil.copyfile(args.sdk_dir / "src/io_new.rs", work / "sdk_io/mod.rs")
-        shutil.copyfile(args.sdk_dir / "src/seph.rs", work / "sdk_seph.rs")
-        source = (Path(__file__).with_name("pin.rs")).read_text()
-        source = source.replace("../../vendor/ledger_device_sdk/src/io_new.rs", "sdk_io/mod.rs")
-        source = source.replace("../../vendor/ledger_device_sdk/src/seph.rs", "sdk_seph.rs")
-        (work / "pin.rs").write_text(source)
-        binary = work / "pin-tests"
-        subprocess.run(["rustc", "--edition=2024", "--test", str(work / "pin.rs"),
+        shutil.copytree(sdk_dir / "src/io_new", work / "sdk_io")
+        shutil.copyfile(sdk_dir / "src/io_new.rs", work / "sdk_io/mod.rs")
+        shutil.copyfile(sdk_dir / "src/seph.rs", work / "sdk_seph.rs")
+        shutil.copyfile(Path(__file__).with_name("sdk_io.rs"), work / "sdk_io.rs")
+        binary = work / "sdk-io-tests"
+        subprocess.run(["rustc", "--edition=2024", "--test", str(work / "sdk_io.rs"),
                         "-o", str(binary)], check=True)
         subprocess.run([str(binary), "--test-threads=1"], check=True)
         shutil.copyfile(root / "src/swap/panic_handler.rs", work / "swap_panic_handler.rs")
