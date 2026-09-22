@@ -21,7 +21,7 @@ pub mod log {
     pub use crate::error;
 }
 
-// Mirror the SDK's two send contracts. The PIN fixture separately runs the real
+// Mirror the SDK's two send contracts. The SDK fixture separately runs the real
 // SDK implementations with a failing transport to keep this contract checked.
 pub mod io {
     pub struct Comm;
