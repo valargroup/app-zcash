@@ -35,7 +35,7 @@ pub(crate) fn swap_panic_handler(info: &PanicInfo) -> ! {
     // SDK's exiting panic handler does, but return to Exchange afterward.
     unsafe {
         if !SWAP_COMM.is_null() {
-            let _ = (*SWAP_COMM).send(&[], io::StatusWords::Panic);
+            let _ = (*SWAP_COMM).begin_response().send(io::StatusWords::Panic);
         }
     }
 
