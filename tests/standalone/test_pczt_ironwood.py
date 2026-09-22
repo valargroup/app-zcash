@@ -22,6 +22,7 @@ from application_client.zcash_command_sender import (
 )
 from application_client.zcash_transaction import split_tx_v5_for_hash_input
 from application_client.zcash_utils import ripemd160, write_varint
+from application_client.zcash_verify_sign import check_orchard_spendauth_signature_validity
 from ragger.error import ExceptionRAPDU
 from ragger.navigator import NavigateWithScenario
 from ragger.navigator.navigation_scenario import NavigationScenarioData, UseCase
@@ -906,16 +907,23 @@ def test_pczt_v5_finished_marker_regression(
     assert len(auth_sig) == 64
 
 
-# Expected Orchard spendAuthSig for a V6 migration PCZT on a freshly started Speculos
-# session (deterministic RNG starting point, Speculos default seed).  The value is
-# constant regardless of the Orchard anchor because NU6.3 excludes the anchor from the
-# sighash — only the authorising-data digest includes it, not the sighash.
-# The bundle carries both pools, so the Ironwood action fields enter the V6 sighash too:
-# regenerating the Ironwood vectors changes this signature as well.
+# Retained signature vector and independently computed ZIP 244/229 digest for the
+# V6 migration fixture. Both pools' action fields enter the digest; anchors do not.
 _EXPECTED_V6_ORCHARD_SIG = bytes.fromhex(
     "d8135f4f857948ed5b3bffe37cdf2df87d7be666dbdff5deebc806596383668d"
     "dbc2c635a7e9f004387cd11bcaa5f71801786916fcbc50d809f12b24bf25d23b"
 )
+_EXPECTED_V6_ORCHARD_SIGHASH = bytes.fromhex(
+    "df5bc59246e4cd6a0b2023fd3db85547b663b5517330bf168cb97c9005736e59"
+)
+
+
+def _assert_v6_spendauth_signature(signature: bytes, expected: bytes, digest: bytes) -> None:
+    """Check the signed message without depending on Speculos's nonce sequence."""
+    changed_digest = bytes([digest[0] ^ 1]) + digest[1:]
+    for candidate in (expected, signature):
+        assert check_orchard_spendauth_signature_validity(_RK_ALPHA_1, candidate, digest)
+        assert not check_orchard_spendauth_signature_validity(_RK_ALPHA_1, candidate, changed_digest)
 
 # Second anchor: first byte flipped so the Orchard anchor bytes differ in every bit
 # that the first byte carries, giving an easy regression signal.
@@ -936,13 +944,7 @@ def test_pczt_v6_orchard_anchor_exclusion_regression(
     anchor: bytes,
     test_name: str,
 ):
-    """V6: the Orchard anchor is excluded from the sighash — changing its value must not alter the signature.
-
-    Each parametrised invocation runs in its own Speculos session (fresh deterministic RNG
-    start state).  If the Orchard anchor were included in the V6 sighash the signature
-    would differ from _EXPECTED_V6_ORCHARD_SIG; if it is correctly excluded both anchors
-    produce the same signature.
-    """
+    """Both Orchard anchors must produce signatures for the same known V6 digest."""
     client = ZcashCommandSender(backend)
     with client.send_pczt(
         pczt_global=PCZT_V6_GLOBAL,
@@ -953,12 +955,8 @@ def test_pczt_v6_orchard_anchor_exclusion_regression(
     ):
         _review_approve(scenario_navigator, test_name)
     orchard_sig = client.pczt_sign_orchard(action_index=0).data
-    assert orchard_sig == _EXPECTED_V6_ORCHARD_SIG, (
-        "Orchard spendAuthSig changed when Orchard anchor changed — "
-        f"Orchard anchor incorrectly excluded from V6 sighash.\n"
-        f"anchor={anchor.hex()}\n"
-        f"got:  {orchard_sig.hex()}\n"
-        f"want: {_EXPECTED_V6_ORCHARD_SIG.hex()}"
+    _assert_v6_spendauth_signature(
+        orchard_sig, _EXPECTED_V6_ORCHARD_SIG, _EXPECTED_V6_ORCHARD_SIGHASH
     )
 
 
