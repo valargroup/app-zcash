@@ -355,3 +355,7 @@ prepare the same cache, so later real actions do not repeat key normalization.
 The retained scalar uses wipe-on-drop storage and redacted debug formatting; it
 is discarded before user review and on parser reset or error. Signing still
 derives its key through the original post-approval path.
+
+Computed randomized verification keys stay typed as compressed keys until their
+bytes are compared with the action's wire encoding. This does not add curve-point
+decoding or change the key comparison.
