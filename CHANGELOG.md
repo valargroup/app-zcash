@@ -7,9 +7,11 @@
   decompression. Coordinates may be included in the existing output header to
   avoid extra commands. Existing compressed-point commands remain compatible.
 
-- Use the published SDK's new I/O path for immediate replies across supported
-  devices, retaining locked-device refusal and review-time command rejection.
+- Use the SDK's new I/O path for immediate replies across supported devices,
+  retaining review-time command rejection. Refuse locked-device packets before
+  built-in commands or framing checks, including during review.
   Reject APDUs whose payload length differs from their declared length.
+  Return control to Exchange after a swap panic even if its error reply fails.
 
 - Reduce repeated account-key derivation, point decoding, and diversifier hashing
   while validating shielded transactions, preserving per-action checks. Reuse full

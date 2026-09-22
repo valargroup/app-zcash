@@ -523,7 +523,7 @@ pub fn normal_main(swap_params: Option<&CreateTxParams>) -> bool {
 
     loop {
         let command = comm.next_command();
-        // Preserve legacy I/O's locked-device refusal before dispatch.
+        // Recheck commands queued by a UI callback before dispatch.
         let locked = unsafe {
             use ledger_device_sdk::sys::{
                 BOLOS_TRUE, os_global_pin_is_validated, os_perso_is_pin_set,
