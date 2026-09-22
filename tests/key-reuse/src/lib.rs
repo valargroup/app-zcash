@@ -8,7 +8,10 @@
 mod tests {
     use ff::Field;
     use ledger_device_sdk::testing::TestType;
-    use orchard::keys::{FullViewingKey, SpendingKey};
+    use orchard::{
+        keys::{FullViewingKey, SpendingKey},
+        primitives::redpallas::{SpendAuth, VerificationKeyBytes},
+    };
     use pasta_curves::pallas;
 
     include!("vectors.rs");
@@ -19,6 +22,7 @@ mod tests {
         name: "combined_keys_match_software_for_both_signs",
         f: || {
             for (seed, expected_fvk, expected_ask, expected_rk) in VECTORS {
+                let expected_rk = VerificationKeyBytes::<SpendAuth>::from(expected_rk);
                 let sk = SpendingKey::ledger_from_bytes(&[seed; 32]).map_err(|_| ())?;
                 let (fvk, ask) = FullViewingKey::ledger_try_from_with_ask(&sk).map_err(|_| ())?;
                 let retained = ask.ledger_validation_key();
