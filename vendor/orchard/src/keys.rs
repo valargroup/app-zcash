@@ -172,17 +172,19 @@ impl core::fmt::Debug for LedgerValidationKey {
 
 #[cfg(feature = "ledger")]
 impl LedgerValidationKey {
-    /// Computes the randomized verification key with the existing Ledger backend.
+    /// Computes a typed compressed verification key with the Ledger backend,
+    /// without constructing an intermediate curve point.
     pub fn randomized_verification_key_bytes(
         &self,
         randomizer: &pallas::Scalar,
-    ) -> Result<[u8; 32], ledger_zcash_crypto::Error> {
+    ) -> Result<redpallas::VerificationKeyBytes<SpendAuth>, ledger_zcash_crypto::Error> {
         let randomizer_bytes = Zeroizing::new(randomizer.to_repr());
         Ok(
             ledger_zcash_crypto::redpallas::spendauth_randomized_verification_key_bytes(
                 &self.0,
                 &randomizer_bytes,
-            )?,
+            )?
+            .into(),
         )
     }
 }
@@ -227,7 +229,7 @@ impl SpendAuthorizingKey {
         self.0.randomize_ledger(randomizer)
     }
 
-    /// Computes only the bytes of the randomized spend-auth verification key
+    /// Computes a typed compressed randomized spend-auth verification key
     /// (`rk = [(ask + randomizer) mod q]·G`) for this key, without constructing
     /// the intermediate curve point. Used to verify a PCZT action's `rk` with a
     /// smaller BN/point footprint than `randomize_ledger` + key conversion.
@@ -235,7 +237,7 @@ impl SpendAuthorizingKey {
     pub fn randomized_verification_key_bytes(
         &self,
         randomizer: &pallas::Scalar,
-    ) -> Result<[u8; 32], ledger_zcash_crypto::Error> {
+    ) -> Result<redpallas::VerificationKeyBytes<SpendAuth>, ledger_zcash_crypto::Error> {
         self.ledger_validation_key()
             .randomized_verification_key_bytes(randomizer)
     }

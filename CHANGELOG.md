@@ -19,9 +19,10 @@
   coordinates for fixed and locally derived points while retaining Ledger’s
   randomized multiplication and validation of external points. Retain normalized
   validation keys across actions under the checked account path and wipe them
-  before review or reset. Combine Sinsemilla additions while preserving their
-  exceptional cases. Compute diversifier square-root ratios without inversion
-  or heap tables.
+  before review or reset. Return compressed verification keys as typed values
+  until the transaction's encoded key is compared. Combine Sinsemilla additions
+  while preserving their exceptional cases. Compute diversifier square-root
+  ratios without inversion or heap tables.
 
 ## 3.9.3
 
