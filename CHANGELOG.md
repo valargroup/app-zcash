@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- Use the published SDK's new I/O path for immediate replies across supported
-  devices, retaining locked-device refusal and review-time command rejection.
+- Use the SDK's new I/O path for immediate replies across supported devices,
+  retaining review-time command rejection. Refuse locked-device packets before
+  built-in commands or framing checks, including during review.
   Reject APDUs whose payload length differs from their declared length.
 
 - Reduce repeated account-key derivation, point decoding, and diversifier hashing
