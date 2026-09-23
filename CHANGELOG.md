@@ -16,7 +16,8 @@
   validation keys across actions under the checked account path and wipe them
   before review or reset. Return compressed verification keys as typed values
   until the transaction's encoded key is compared. Combine Sinsemilla additions
-  while preserving their exceptional cases.
+  while preserving their exceptional cases. Compute diversifier square-root
+  ratios without inversion or heap tables.
 
 ## 3.9.3
 
