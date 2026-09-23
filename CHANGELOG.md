@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Use the SDK's new I/O path for immediate replies across supported devices,
+  retaining review-time command rejection and the PIN check before Zcash command
+  dispatch. Use the published SDK for built-in commands and framing checks, which
+  can respond while locked instead of returning the legacy PIN error.
+  Reject APDUs whose payload length differs from their declared length.
+  Return control to Exchange after a swap panic even if its error reply fails.
+
 - Reduce repeated account-key derivation, point decoding, and diversifier hashing
   while validating shielded transactions, preserving per-action checks. Reuse full
   coordinates for fixed and locally derived points while retaining Ledger’s

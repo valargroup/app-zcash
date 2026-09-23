@@ -11,3 +11,14 @@ randomized verification key and an independently computed transaction digest.
 Retained signature vectors must verify too. Byte-for-byte comparison is not
 appropriate when an optimization changes how many blinded SDK operations consume
 the emulator's deterministic random stream before the randomized signature.
+
+`test_usb_reply.py` pauses emulator ticker events to verify immediate USB HID
+replies and sends overlapping commands during review to check that approval and
+rejection still apply to the original transaction.
+
+The app uses the published SDK 1.37 `io_new` on every supported target. The app
+checks the PIN before dispatching Zcash commands. Built-in commands and framing
+errors follow the SDK behavior described in [APDU.md](../docs/APDU.md). The ticker
+test is emulator-only and does not establish physical USB, BLE or NFC timings.
+`test_error_cmd.py` checks strict short/extended APDU lengths, four-byte empty
+commands and successful communication after framing errors.
