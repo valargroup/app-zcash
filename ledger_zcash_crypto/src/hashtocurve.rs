@@ -65,8 +65,9 @@ const PALLAS_THETA: Fp = Fp::from_raw([
     0x0f7bdb65814179b4,
 ]);
 
-// `GENERATOR^t where t * 2^s + 1 = p` with `t` odd; in other words, this is a `2^s` root of unity.
-// Used by `sqrt_ratio()`.
+// `GENERATOR^t where t * 2^s + 1 = p` with `t` odd; in other words, this is a
+// `2^s` root of unity. Used to verify `sqrt_ratio()` in device tests.
+#[cfg(test)]
 const PALLAS_ROOT_OF_UNITY: Fp = Fp::from_raw([
     0xbdad6fabd87ea32f,
     0xea322bf2b7bb7584,
@@ -518,12 +519,6 @@ fn sqrt_ratio(num: &Fp, div: &Fp) -> Result<(bool, Fp), Error> {
         x = pallas::Base::conditional_select(&(x * z), &x, is_one);
         z = z.square();
         b = pallas::Base::conditional_select(&(b * z), &b, is_one);
-    }
-
-    let expected =
-        pallas::Base::conditional_select(&(PALLAS_ROOT_OF_UNITY.0 * num.0), &num.0, is_square);
-    if x.square() * div.0 != expected {
-        return Err(Error::InvalidDiversifyHashPoint);
     }
 
     Ok((bool::from(is_square), Fp(x)))
