@@ -20,6 +20,12 @@ Recipient-reuse regressions cover malformed recipient keys, wrong ownership, rho
 rseed and nullifiers for Orchard and Ironwood. The crypto unit tests compare raw
 and validated-recipient nullifiers and reject mismatched account/base material.
 
+`test_pczt_key_reuse.py` uses distinct public notes and randomized keys to cover
+multiple real spends, leading dummy actions, both pools, wrong account/rk after
+cache reuse, and recovery with a fresh valid transaction. Orchard signatures are
+checked with the independent Python verifier. See `key-reuse/README.md` for the
+separate on-device key-vector harness covering both normalization signs.
+
 The app uses the published SDK 1.37 `io_new` on every supported target. The app
 checks the PIN before dispatching Zcash commands. Built-in commands and framing
 errors follow the SDK behavior described in [APDU.md](../docs/APDU.md). The ticker
