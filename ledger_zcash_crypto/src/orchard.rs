@@ -21,7 +21,7 @@ use ledger_device_sdk::hash::{
 use pasta_curves::pallas;
 use zeroize::Zeroizing;
 
-use crate::points::{Basepoint, ValidatedPallasPoint};
+use crate::points::Basepoint;
 
 use crate::{
     Error, ORCHARD_ESK_DOMAIN_SEPARATOR, ORCHARD_PSI_DOMAIN_SEPARATOR,
@@ -86,18 +86,7 @@ pub fn decipher_value_with_ovk(
     action: &OrchardActionCiphertext<'_>,
     expected_note_version: u8,
 ) -> Result<Option<DecipheredOrchardOutput>, Error> {
-    decipher_value_with_ovk_and_point(ovk, action, expected_note_version, None)
-}
-
-/// Recovers an output using optional checked recipient coordinates. A supplied
-/// point must match the key recovered from the authenticated outgoing plaintext.
-pub fn decipher_value_with_ovk_and_point(
-    ovk: &[u8; HASH_SIZE],
-    action: &OrchardActionCiphertext<'_>,
-    expected_note_version: u8,
-    recipient_point: Option<&ValidatedPallasPoint>,
-) -> Result<Option<DecipheredOrchardOutput>, Error> {
-    try_output_recovery_with_ovk(ovk, action, expected_note_version, recipient_point)
+    try_output_recovery_with_ovk(ovk, action, expected_note_version)
 }
 
 pub fn decipher_compact_value(
@@ -105,18 +94,7 @@ pub fn decipher_compact_value(
     compact: &OrchardCompactAction,
     expected_note_version: u8,
 ) -> Result<Option<DecipheredOrchardOutput>, Error> {
-    decipher_compact_value_with_point(ivk, compact, expected_note_version, None)
-}
-
-/// Decrypts an output using optional checked ephemeral coordinates. A supplied
-/// point must match this action's canonical ephemeral key before multiplication.
-pub fn decipher_compact_value_with_point(
-    ivk: &[u8; HASH_SIZE],
-    compact: &OrchardCompactAction,
-    expected_note_version: u8,
-    ephemeral_point: Option<&ValidatedPallasPoint>,
-) -> Result<Option<DecipheredOrchardOutput>, Error> {
-    try_compact_note_decryption_with_ivk(ivk, compact, expected_note_version, ephemeral_point)
+    try_compact_note_decryption_with_ivk(ivk, compact, expected_note_version)
 }
 
 /// Canonical recipient material with a nonidentity base and transmission key.
@@ -271,7 +249,6 @@ fn try_output_recovery_with_ovk(
     ovk: &[u8; HASH_SIZE],
     action: &OrchardActionCiphertext<'_>,
     expected_note_version: u8,
-    recipient_point: Option<&ValidatedPallasPoint>,
 ) -> Result<Option<DecipheredOrchardOutput>, Error> {
     let rho = match pallas_base_from_repr(action.compact.nullifier) {
         Ok(rho) => rho,
@@ -299,7 +276,7 @@ fn try_output_recovery_with_ovk(
     pk_d.copy_from_slice(&out_plaintext[..HASH_SIZE]);
     esk.copy_from_slice(&out_plaintext[HASH_SIZE..ORCHARD_OUT_PLAINTEXT_SIZE]);
 
-    let Some(pk_d_point) = point_for_encoding(&pk_d, recipient_point)? else {
+    let Some(pk_d_point) = validated_nonidentity_pallas_point(&pk_d)? else {
         return Ok(None);
     };
     if !is_valid_nonzero_pallas_scalar(&esk) {
@@ -338,7 +315,6 @@ fn try_compact_note_decryption_with_ivk(
     ivk: &[u8; HASH_SIZE],
     compact: &OrchardCompactAction,
     expected_note_version: u8,
-    ephemeral_point: Option<&ValidatedPallasPoint>,
 ) -> Result<Option<DecipheredOrchardOutput>, Error> {
     let rho = match pallas_base_from_repr(compact.nullifier) {
         Ok(rho) => rho,
@@ -354,7 +330,7 @@ fn try_compact_note_decryption_with_ivk(
         _ => return Ok(None),
     };
 
-    let Some(ephemeral_point) = point_for_encoding(&compact.ephemeral_key, ephemeral_point)? else {
+    let Some(ephemeral_point) = validated_nonidentity_pallas_point(&compact.ephemeral_key)? else {
         return Ok(None);
     };
 
@@ -518,7 +494,7 @@ fn chacha20_decrypt_compact(
 }
 
 /// Consumes a decoded point so its SDK resources are released after agreement.
-/// Host-supplied points must pass `point_for_encoding` first.
+/// Host-supplied points must pass `validated_nonidentity_pallas_point` first.
 fn key_agreement_with_point(
     scalar_bytes_le: &[u8; HASH_SIZE],
     mut point: EcPoint,
@@ -552,16 +528,6 @@ fn is_valid_nonzero_pallas_scalar(bytes: &[u8; HASH_SIZE]) -> bool {
 
 fn is_valid_nonidentity_pallas_point(bytes: &[u8; HASH_SIZE]) -> Result<bool, Error> {
     Ok(validated_nonidentity_pallas_point(bytes)?.is_some())
-}
-
-fn point_for_encoding(
-    encoded: &[u8; HASH_SIZE],
-    supplied: Option<&ValidatedPallasPoint>,
-) -> Result<Option<EcPoint>, Error> {
-    match supplied {
-        Some(point) => point.to_sdk_for_encoding(encoded).map(Some),
-        None => validated_nonidentity_pallas_point(encoded),
-    }
 }
 
 /// Decodes once, retaining the canonical encoding and nonidentity checks.

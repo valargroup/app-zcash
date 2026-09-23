@@ -2,11 +2,6 @@
 
 ## Unreleased
 
-- Accept optional public point coordinates during shielded PCZT validation,
-  checking their validity and transaction binding before using them to avoid
-  decompression. Coordinates may be included in the existing output header to
-  avoid extra commands. Existing compressed-point commands remain compatible.
-
 - Use the SDK's new I/O path for immediate replies across supported devices,
   retaining review-time command rejection and the PIN check before Zcash command
   dispatch. Use the published SDK for built-in commands and framing checks, which

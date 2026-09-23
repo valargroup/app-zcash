@@ -1,49 +1,11 @@
-//! Full coordinates for locally constructed and independently checked external points.
+//! Full coordinates for points constructed locally; external encodings still require decoding.
 use ledger_device_sdk::ecc::{CurvesId, CxError, math::EcPoint};
 
-/// Internal affine coordinates, constructed locally or after external point validation.
+/// Internal affine coordinates. Only known constants and hash-to-curve construct these.
 #[derive(Clone, Copy)]
 pub(crate) struct AffinePoint {
     pub(crate) x_be: [u8; 32],
     pub(crate) y_be: [u8; 32],
-}
-
-/// A canonical nonidentity Pallas point checked with the SDK, without decompression.
-/// Holds coordinate bytes rather than a live SDK allocation. This validates the
-/// point only; consumers must also bind it to the expected transaction encoding.
-#[derive(Clone, Copy)]
-pub struct ValidatedPallasPoint(AffinePoint);
-
-impl ValidatedPallasPoint {
-    /// Checks canonical little-endian coordinates and curve membership. Rejects
-    /// the identity and malformed coordinates before they can reach secret multiplication.
-    pub fn from_coordinates(x_le: [u8; 32], y_le: [u8; 32]) -> Result<Self, crate::Error> {
-        crate::pallas_base_from_repr(x_le).map_err(|_| crate::Error::MalformedPallasPoint)?;
-        crate::pallas_base_from_repr(y_le).map_err(|_| crate::Error::MalformedPallasPoint)?;
-        let mut affine = AffinePoint {
-            x_be: x_le,
-            y_be: y_le,
-        };
-        affine.x_be.reverse();
-        affine.y_be.reverse();
-        let point = affine.to_sdk()?;
-        if !point.is_on_curve()? || point.is_at_infinity()? || affine.to_bytes() == [0; 32] {
-            return Err(crate::Error::MalformedPallasPoint);
-        }
-        Ok(Self(affine))
-    }
-
-    /// Whether these coordinates represent exactly the supplied canonical encoding.
-    pub fn matches_encoding(&self, encoded: &[u8; 32]) -> bool {
-        self.0.to_bytes() == *encoded
-    }
-
-    pub(crate) fn to_sdk_for_encoding(self, encoded: &[u8; 32]) -> Result<EcPoint, crate::Error> {
-        if !self.matches_encoding(encoded) {
-            return Err(crate::Error::MalformedPallasPoint);
-        }
-        Ok(self.0.to_sdk()?)
-    }
 }
 
 impl AffinePoint {
@@ -135,55 +97,6 @@ impl Basepoint {
 mod tests {
     use super::*;
     use ledger_device_sdk::testing::TestType;
-
-    #[test_case]
-    const SUPPLIED_COORDINATES_MATCH_DECOMPRESSION: TestType = TestType {
-        modname: module_path!(),
-        name: "supplied_coordinates_match_decompression",
-        f: || {
-            for base in [
-                Basepoint::SpendAuth,
-                Basepoint::Value,
-                Basepoint::Randomness,
-                Basepoint::Nullifier,
-            ] {
-                let affine = base.coordinates();
-                let mut x = affine.x_be;
-                let mut y = affine.y_be;
-                x.reverse();
-                y.reverse();
-                let encoded = affine.to_bytes();
-                let supplied = ValidatedPallasPoint::from_coordinates(x, y).map_err(|_| ())?;
-                let mut scalar = [0; 32];
-                scalar[31] = 7;
-                let multiply = |mut point: EcPoint| {
-                    point.rnd_scalarmul(&scalar).map_err(|_| ())?;
-                    crate::pallas_point_to_bytes(&point).map_err(|_| ())
-                };
-                let expected = multiply(crate::pallas_point_from_bytes(&encoded).map_err(|_| ())?)?;
-                let actual = multiply(supplied.to_sdk_for_encoding(&encoded).map_err(|_| ())?)?;
-                if expected != actual {
-                    return Err(());
-                }
-                let mut opposite_sign = encoded;
-                opposite_sign[31] ^= 0x80;
-                if supplied.to_sdk_for_encoding(&opposite_sign).is_ok() {
-                    return Err(());
-                }
-                for (bad_x, bad_y) in [
-                    (x, [0; 32]),
-                    ([0; 32], [0; 32]),
-                    ([0xff; 32], y),
-                    (x, [0xff; 32]),
-                ] {
-                    if ValidatedPallasPoint::from_coordinates(bad_x, bad_y).is_ok() {
-                        return Err(());
-                    }
-                }
-            }
-            Ok(())
-        },
-    };
 
     #[test_case]
     const FIXED_BASES_MATCH_ORIGINAL_ENCODINGS: TestType = TestType {
