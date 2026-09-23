@@ -19,7 +19,6 @@ pub mod transparent_address;
 pub mod transparent_script;
 
 pub use crate::hashtocurve::{DiversifiedBase, diversify_hash_ledger};
-pub use crate::points::ValidatedPallasPoint;
 use crate::sinsemilla::sinsemilla_short_commit;
 use ff::{Field, PrimeField};
 use ledger_device_sdk::{

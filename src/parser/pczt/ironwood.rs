@@ -199,7 +199,6 @@ impl PcztParser {
             HexSlice(&self.current_action.ephemeral_key)
         );
 
-        self.parse_output_point_coordinates(reader)?;
         Self::ensure_ironwood_apdu_group_end(reader)?;
         self.state = PcztParserState::WaitIronwoodEncCiphertextLen;
 
@@ -253,7 +252,6 @@ impl PcztParser {
         reader: &mut ByteReader<'_>,
     ) -> Result<(), ParserError> {
         ok!(reader.read_exact(&mut self.current_action.output_recipient));
-        self.check_output_recipient_point()?;
         debug!(
             "PCZT ironwood action #{} recipient: {}",
             self.ironwood_action_parsed_count,
@@ -474,8 +472,6 @@ impl PcztParser {
         self.current_action.output_rseed = None;
         self.current_action.cmx = [0; 32];
         self.current_action.ephemeral_key = [0; 32];
-        self.current_action.ephemeral_point = None;
-        self.current_action.recipient_point = None;
         self.current_action.out_ciphertext = None;
         self.current_action.output_recipient = [0; ORCHARD_RAW_ADDRESS_SIZE];
         self.current_action.output_value = 0;
@@ -681,12 +677,7 @@ impl PcztParser {
         let compact = self.current_ironwood_compact_action(enc_ciphertext);
         let network = keys.network;
 
-        match decipher_compact_value_with_point(
-            &keys.internal_ivk,
-            &compact,
-            NOTE_VERSION_IRONWOOD,
-            self.current_action.ephemeral_point.as_ref(),
-        ) {
+        match decipher_compact_value(&keys.internal_ivk, &compact, NOTE_VERSION_IRONWOOD) {
             Ok(Some(output)) => {
                 self.validate_deciphered_ironwood_output(&output)?;
                 self.push_deciphered_ironwood_output(ctx, output, network, true)?;
@@ -707,12 +698,7 @@ impl PcztParser {
             out_ciphertext: *out_ciphertext,
         };
 
-        match decipher_value_with_ovk_and_point(
-            &keys.external_ovk,
-            &action,
-            NOTE_VERSION_IRONWOOD,
-            self.current_action.recipient_point.as_ref(),
-        ) {
+        match decipher_value_with_ovk(&keys.external_ovk, &action, NOTE_VERSION_IRONWOOD) {
             Ok(Some(output)) => {
                 self.validate_deciphered_ironwood_output(&output)?;
                 self.push_deciphered_ironwood_output(ctx, output, network, false)?;

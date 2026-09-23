@@ -2,7 +2,6 @@ use ledger_device_sdk::io::{Command, CommandResponse};
 use ledger_device_sdk::log::{debug, error, info};
 
 use crate::AppSW;
-use crate::consts::P2PcztPoints;
 use crate::handlers::sign_tx::{append_signature, orchard_spend_auth_signature_with_sk};
 use crate::parser::{LegacyParserMode, ParserError, ParserSourceError, PcztParserCtx};
 use crate::tx::{TxContext, check_change_returns_to_signing_account};
@@ -97,21 +96,6 @@ pub fn handler_pczt_header<'a>(
     }
 
     Ok(comm.begin_response())
-}
-
-pub fn handler_pczt_point_coordinates<'a>(
-    command: Command<'a>,
-    ctx: &mut TxContext,
-    ironwood: bool,
-    points: P2PcztPoints,
-) -> Result<CommandResponse<'a>, AppSW> {
-    if let Err(error) =
-        ctx.pczt_parser
-            .parse_point_coordinates(command.get_data(), ironwood, points)
-    {
-        return Err(map_pczt_parser_error(ctx, error));
-    }
-    Ok(command.into_response())
 }
 
 pub fn handler_pczt_transparent_input<'a>(

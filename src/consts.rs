@@ -94,7 +94,6 @@ pub const INS_PCZT_ORCHARD_ACTION: u8 = 0x56;
 pub const INS_PCZT_SIGN_ORCHARD: u8 = 0x57;
 pub const INS_PCZT_IRONWOOD_ACTION: u8 = 0x58;
 pub const INS_PCZT_SIGN_IRONWOOD: u8 = 0x59;
-pub const INS_PCZT_POINT_COORDINATES: u8 = 0x5A;
 
 // Measurement-only instruction, outside the range the protocol assigns and absent from a released
 // application. See `crate::heap_probe` for why it must stay that way.
@@ -168,25 +167,3 @@ impl TryFrom<u8> for P2ShieldedAddrMode {
 pub const OVERWINTERED_FLAG: u32 = 0x8000_0000;
 pub const V6_TX_VERSION: u32 = 6;
 pub const V6_VERSION_GROUP_ID: u32 = 0xD884B698;
-
-/// Public points supplied by a PCZT coordinate command.
-#[derive(Debug, Clone, Copy)]
-#[repr(u8)]
-pub enum P2PcztPoints {
-    Ephemeral = 0,
-    Recipient = 1,
-    Both = 2,
-}
-
-impl TryFrom<u8> for P2PcztPoints {
-    type Error = AppSW;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Self::Ephemeral),
-            1 => Ok(Self::Recipient),
-            2 => Ok(Self::Both),
-            _ => Err(AppSW::WrongP1P2),
-        }
-    }
-}
