@@ -16,6 +16,10 @@ the emulator's deterministic random stream before the randomized signature.
 replies and sends overlapping commands during review to check that approval and
 rejection still apply to the original transaction.
 
+Recipient-reuse regressions cover malformed recipient keys, wrong ownership, rho,
+rseed and nullifiers for Orchard and Ironwood. The crypto unit tests compare raw
+and validated-recipient nullifiers and reject mismatched account/base material.
+
 The app uses the published SDK 1.37 `io_new` on every supported target. The app
 checks the PIN before dispatching Zcash commands. Built-in commands and framing
 errors follow the SDK behavior described in [APDU.md](../docs/APDU.md). The ticker
