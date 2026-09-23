@@ -15,7 +15,8 @@
   randomized multiplication and validation of external points. Retain normalized
   validation keys across actions under the checked account path and wipe them
   before review or reset. Return compressed verification keys as typed values
-  until the transaction's encoded key is compared.
+  until the transaction's encoded key is compared. Combine Sinsemilla additions
+  while preserving their exceptional cases.
 
 ## 3.9.3
 
