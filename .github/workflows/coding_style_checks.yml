@@ -19,7 +19,7 @@ on:
 jobs:
   check_linting:
     name: Check linting using the reusable workflow
-    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_lint.yml@v1
+    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_lint.yml@f5e0e2c2cbd05ee2fc42187b3b3bb346778abc4d # v1
     with:
       source: './src'
 
@@ -38,7 +38,7 @@ jobs:
         target: [nanox, nanosplus, stax, flex, apex_p]
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Clippy
         run: cargo clippy --locked -p zcash -p ledger_zcash_crypto --target ${{ matrix.target }} -- -D warnings

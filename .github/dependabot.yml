@@ -12,3 +12,23 @@ updates:
     allow:
       - dependency-name: "ledger_device_sdk"
       - dependency-name: "include_gif"
+
+  - package-ecosystem: "pip"
+    directory: "/tests/application_client"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/tests/standalone"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/tests/swap"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

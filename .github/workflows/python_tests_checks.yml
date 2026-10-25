@@ -18,7 +18,7 @@ on:
 jobs:
   lint:
     name: Call Ledger Python linters
-    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_python_checks.yml@v1
+    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_python_checks.yml@f5e0e2c2cbd05ee2fc42187b3b3bb346778abc4d # v1
     with:
       run_type_check: true
       src_directory: application_client
